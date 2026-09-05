@@ -1,0 +1,103 @@
+# Comprehensive Soroban State Policy Manifest Example
+# Use this file as a blueprint for your project's soroban-state-policy.toml
+
+[policy]
+name = "soroban-lending-protocol"
+version = "1.2.0"
+contract_id = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+description = "Storage lifecycle policies for decentralized money market on Stellar"
+maintainer = "Security Engineering Team <security@example.com>"
+
+# Default fallback TTLs when not declared per key
+[defaults.persistent_ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000   # ~5.7 days
+target_ledgers = 535680       # ~31 days
+
+[defaults.instance_ttl]
+mode = "keeper"
+threshold_ledgers = 100000
+target_ledgers = 1000000      # ~58 days
+
+# ─────────────────────────────────────────────────────────────
+# Instance Storage Keys
+# ─────────────────────────────────────────────────────────────
+[[state]]
+name = "ProtocolAdmin"
+tier = "instance"
+key_schema = "Admin"
+criticality = "critical"
+keeper_eligible = true
+privacy = "public"
+notes = "Admin multisig address and timelock parameters"
+
+[state.ttl]
+mode = "keeper"
+threshold_ledgers = 100000
+target_ledgers = 1000000
+
+[state.recovery]
+strategy = "keeper-restore"
+keeper_eligible = true
+
+# ─────────────────────────────────────────────────────────────
+# Persistent Storage Keys (High Cardinality)
+# ─────────────────────────────────────────────────────────────
+[[state]]
+name = "UserDeposit"
+tier = "persistent"
+key_schema = "UserDeposit(Address, Address)"
+criticality = "critical"
+expected_cardinality = "unbounded"
+keeper_eligible = true
+privacy = "public"
+notes = "Collateral balances deposited by users"
+
+[state.ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000
+target_ledgers = 535680
+
+[state.recovery]
+strategy = "restore-on-demand"
+keeper_eligible = false
+
+[[state]]
+name = "BorrowPosition"
+tier = "persistent"
+key_schema = "Borrow(Address)"
+criticality = "critical"
+expected_cardinality = "unbounded"
+keeper_eligible = true
+privacy = "public"
+
+[state.ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000
+target_ledgers = 535680
+
+[state.recovery]
+strategy = "restore-on-demand"
+keeper_eligible = false
+
+# ─────────────────────────────────────────────────────────────
+# Temporary Storage Keys (Low Rent, Reconstructible)
+# ─────────────────────────────────────────────────────────────
+[[state]]
+name = "OraclePriceFeed"
+tier = "temporary"
+key_schema = "Price(Symbol)"
+criticality = "medium"
+expected_cardinality = "small"
+keeper_eligible = false
+privacy = "public"
+notes = "Cached median price from Pyth/Reflector oracles; refreshed on trade"
+
+[state.ttl]
+mode = "bump-on-access"
+threshold_ledgers = 10000
+target_ledgers = 34560       # ~48 hours
+
+[state.recovery]
+strategy = "reconstructible"
+reconstruction_source = "Pyth price feed oracle"

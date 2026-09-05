@@ -1,0 +1,51 @@
+[policy]
+name = "safe-state-fixture"
+version = "1.0.0"
+description = "Policy manifest for safe Soroban state fixture coverage."
+
+[[state]]
+name = "Position"
+tier = "persistent"
+key_schema = "Position(Address)"
+criticality = "high"
+keeper_eligible = false
+privacy = "public"
+
+[state.ttl]
+mode = "bump-on-access"
+threshold_ledgers = 50000
+target_ledgers = 500000
+
+[state.recovery]
+strategy = "restore-on-demand"
+keeper_eligible = false
+
+[[state]]
+name = "Config"
+tier = "instance"
+key_schema = "Config"
+criticality = "critical"
+keeper_eligible = true
+privacy = "public"
+
+[state.ttl]
+mode = "keeper"
+threshold_ledgers = 100000
+target_ledgers = 1000000
+
+[state.recovery]
+strategy = "keeper-restore"
+keeper_eligible = true
+
+[[state]]
+name = "Cache"
+tier = "temporary"
+key_schema = "Cache(Symbol)"
+criticality = "low"
+keeper_eligible = false
+privacy = "public"
+notes = "Reconstructible quote cache."
+
+[state.recovery]
+strategy = "reconstructible"
+reconstruction_source = "External quote source"

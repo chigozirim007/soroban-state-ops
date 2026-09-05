@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/state-policy",
+    "crates/state-lint-core",
+    "crates/soroban-state-lint",
+    "crates/state-fixtures",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/soroban-ops/soroban-state-ops"
+description = "Soroban storage-safety toolkit: linting, TTL observability, and renewal automation"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+clap = { version = "4", features = ["derive"] }
+syn = { version = "2", features = ["full", "parsing", "visit"] }
+quote = "1"
+proc-macro2 = "1"
+thiserror = "2"
+anyhow = "1"
+walkdir = "2"
+colored = "2"
+regex = "1"

@@ -1,0 +1,91 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL — shared state store
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: soroban-ops-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: soroban_state_ops
+      POSTGRES_USER: soroban_ops
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../infra/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soroban_ops -d soroban_state_ops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Keeper — TTL monitoring & renewal service
+  # ─────────────────────────────────────────────
+  keeper:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.keeper
+    container_name: soroban-ops-keeper
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KEEPER_DATABASE_URL: postgresql://soroban_ops:${POSTGRES_PASSWORD:-dev_password_change_me}@postgres:5432/soroban_state_ops
+      KEEPER_RPC_URL: ${KEEPER_RPC_URL:-https://soroban-testnet.stellar.org}
+      KEEPER_NETWORK_PASSPHRASE: ${KEEPER_NETWORK_PASSPHRASE:-Test SDF Network ; September 2015}
+      KEEPER_POLL_INTERVAL_MS: ${KEEPER_POLL_INTERVAL_MS:-60000}
+      KEEPER_SIGNER_TYPE: ${KEEPER_SIGNER_TYPE:-local-encrypted}
+      KEEPER_KEY_SOURCE: ${KEEPER_KEY_SOURCE:-}
+      KEEPER_KEY_PASSPHRASE: ${KEEPER_KEY_PASSPHRASE:-}
+      KEEPER_DRY_RUN: ${KEEPER_DRY_RUN:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: production
+
+  # ─────────────────────────────────────────────
+  # API — REST server for dashboard & integrations
+  # ─────────────────────────────────────────────
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: soroban-ops-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-4000}:4000"
+    environment:
+      DATABASE_URL: postgresql://soroban_ops:${POSTGRES_PASSWORD:-dev_password_change_me}@postgres:5432/soroban_state_ops
+      API_PORT: "4000"
+      API_HOST: "0.0.0.0"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: production
+
+  # ─────────────────────────────────────────────
+  # Dashboard — Next.js state lifecycle UI
+  # ─────────────────────────────────────────────
+  dashboard:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.dashboard
+    container_name: soroban-ops-dashboard
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${DASHBOARD_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://api:4000}
+      NODE_ENV: production
+
+volumes:
+  pgdata:
+    driver: local

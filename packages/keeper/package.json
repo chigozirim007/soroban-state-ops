@@ -1,0 +1,43 @@
+{
+  "name": "@soroban-ops/keeper",
+  "version": "0.1.0",
+  "description": "Soroban TTL keeper service — RPC-backed contract state observation, TTL tracking, renewal automation, and alert dispatch",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run --pool=threads",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@soroban-ops/shared-types": "workspace:*",
+    "@soroban-ops/signer-sdk": "workspace:*",
+    "@stellar/stellar-sdk": "^13.1.0",
+    "pg": "^8.16.0",
+    "pino": "^9.6.0",
+    "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soroban-ops/soroban-state-ops",
+    "directory": "packages/keeper"
+  }
+}

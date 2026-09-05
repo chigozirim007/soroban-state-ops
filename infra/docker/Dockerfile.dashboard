@@ -1,0 +1,29 @@
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/shared-types/package.json packages/shared-types/
+COPY packages/dashboard/package.json packages/dashboard/
+RUN pnpm install --frozen-lockfile --prod=false
+
+COPY packages/shared-types/ packages/shared-types/
+RUN pnpm --filter @soroban-ops/shared-types build
+
+COPY packages/dashboard/ packages/dashboard/
+RUN pnpm --filter @soroban-ops/dashboard build
+
+# Production stage
+FROM node:22-alpine
+WORKDIR /app
+
+COPY --from=base /app/packages/dashboard/.next/standalone ./
+COPY --from=base /app/packages/dashboard/.next/static ./.next/static
+COPY --from=base /app/packages/dashboard/public ./public
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+USER node
+CMD ["node", "server.js"]

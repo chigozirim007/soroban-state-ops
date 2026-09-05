@@ -1,0 +1,19 @@
+[package]
+name = "soroban-state-lint"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "CLI tool for Soroban storage-safety linting — detect risky storage patterns before deployment"
+
+[[bin]]
+name = "soroban-state-lint"
+path = "src/main.rs"
+
+[dependencies]
+state-policy = { path = "../state-policy" }
+state-lint-core = { path = "../state-lint-core" }
+clap = { workspace = true }
+serde_json = { workspace = true }
+colored = { workspace = true }
+anyhow = { workspace = true }

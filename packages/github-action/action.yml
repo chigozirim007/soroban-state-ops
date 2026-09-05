@@ -1,0 +1,103 @@
+name: "Soroban State Lint"
+description: "Static analysis for Soroban storage-safety patterns. Detects risky TTL, temporary storage misuse, and authorization anti-patterns."
+author: "soroban-ops"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Path to scan for Soroban contracts"
+    required: false
+    default: "."
+  policy:
+    description: "Path to soroban-state-policy.toml policy file"
+    required: false
+  format:
+    description: "Output format: text, json, sarif"
+    required: false
+    default: "sarif"
+  fail-on:
+    description: "Minimum severity to fail the check: error, warning, info"
+    required: false
+    default: "error"
+  version:
+    description: "Version of soroban-state-lint to install (default: latest)"
+    required: false
+    default: "latest"
+
+outputs:
+  diagnostics-count:
+    description: "Total number of diagnostics found"
+  errors-count:
+    description: "Number of error-level diagnostics"
+  warnings-count:
+    description: "Number of warning-level diagnostics"
+  sarif-file:
+    description: "Path to the generated SARIF file (when format=sarif)"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      if: ${{ inputs.version == 'latest' }}
+
+    - name: Install soroban-state-lint
+      shell: bash
+      run: |
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          echo "Installing soroban-state-lint from crates.io..."
+          cargo install soroban-state-lint --locked || cargo install soroban-state-lint
+        else
+          echo "Installing soroban-state-lint@${{ inputs.version }}..."
+          cargo install soroban-state-lint --version "${{ inputs.version }}" --locked || \
+            cargo install soroban-state-lint --version "${{ inputs.version }}"
+        fi
+        echo "$(dirname $(which soroban-state-lint))" >> $GITHUB_PATH
+
+    - name: Run soroban-state-lint
+      id: lint
+      shell: bash
+      run: |
+        ARGS="check"
+
+        if [ -n "${{ inputs.policy }}" ]; then
+          ARGS="$ARGS --policy ${{ inputs.policy }}"
+        fi
+
+        ARGS="$ARGS --format ${{ inputs.format }}"
+        ARGS="$ARGS --fail-on ${{ inputs.fail-on }}"
+        ARGS="$ARGS ${{ inputs.path }}"
+
+        echo "Running: soroban-state-lint $ARGS"
+
+        # Capture output for SARIF upload
+        if [ "${{ inputs.format }}" = "sarif" ]; then
+          soroban-state-lint $ARGS > soroban-state-lint.sarif 2>&1 || true
+          echo "sarif-file=soroban-state-lint.sarif" >> $GITHUB_OUTPUT
+
+          # Also run text format for PR annotations
+          soroban-state-lint check --format text --fail-on ${{ inputs.fail-on }} ${{ inputs.path }} || EXIT_CODE=$?
+
+          # Count diagnostics from text output
+          ERRORS=$(grep -c "🔴 ERROR" <<< "$(soroban-state-lint check --format text ${{ inputs.path }} 2>/dev/null)" || echo "0")
+          WARNINGS=$(grep -c "🟡 WARN" <<< "$(soroban-state-lint check --format text ${{ inputs.path }} 2>/dev/null)" || echo "0")
+          TOTAL=$((ERRORS + WARNINGS))
+
+          echo "diagnostics-count=$TOTAL" >> $GITHUB_OUTPUT
+          echo "errors-count=$ERRORS" >> $GITHUB_OUTPUT
+          echo "warnings-count=$WARNINGS" >> $GITHUB_OUTPUT
+
+          exit ${EXIT_CODE:-0}
+        else
+          soroban-state-lint $ARGS
+        fi
+
+    - name: Upload SARIF to GitHub
+      if: ${{ inputs.format == 'sarif' && always() }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: soroban-state-lint.sarif
+        category: soroban-state-lint

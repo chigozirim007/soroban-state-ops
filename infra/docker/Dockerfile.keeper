@@ -1,0 +1,38 @@
+FROM node:22-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+# Install dependencies
+COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/shared-types/package.json packages/shared-types/
+COPY packages/signer-sdk/package.json packages/signer-sdk/
+COPY packages/keeper/package.json packages/keeper/
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Build shared dependencies first
+COPY packages/shared-types/ packages/shared-types/
+RUN pnpm --filter @soroban-ops/shared-types build
+
+COPY packages/signer-sdk/ packages/signer-sdk/
+RUN pnpm --filter @soroban-ops/signer-sdk build
+
+# Build keeper
+COPY packages/keeper/ packages/keeper/
+RUN pnpm --filter @soroban-ops/keeper build
+
+# Production stage
+FROM node:22-alpine
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=base /app/packages/shared-types/package.json ./packages/shared-types/
+COPY --from=base /app/packages/signer-sdk/dist ./packages/signer-sdk/dist
+COPY --from=base /app/packages/signer-sdk/package.json ./packages/signer-sdk/
+COPY --from=base /app/packages/keeper/dist ./packages/keeper/dist
+COPY --from=base /app/packages/keeper/package.json ./packages/keeper/
+COPY --from=base /app/pnpm-workspace.yaml ./
+
+USER node
+CMD ["node", "packages/keeper/dist/index.js"]

@@ -1,0 +1,12 @@
+[package]
+name = "reference-token-vault"
+version = "0.1.0"
+edition = "2021"
+description = "Reference Soroban contract implementing storage lifecycle best practices"
+license = "Apache-2.0"
+
+[dependencies]
+soroban-sdk = { version = "21.0.0", default-features = false }
+
+[dev-dependencies]
+soroban-sdk = { version = "21.0.0" }

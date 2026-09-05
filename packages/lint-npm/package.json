@@ -1,0 +1,39 @@
+{
+  "name": "@soroban-ops/lint",
+  "version": "0.1.0",
+  "description": "NPM distribution of soroban-state-lint — Soroban storage-safety linter. Thin wrapper around the Rust CLI binary.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "soroban-ops-lint": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "postinstall": "node -e \"try{require('./dist/install.js')}catch(e){}\"",
+    "test": "vitest run --pool=threads"
+  },
+  "dependencies": {
+    "which": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "@types/node": "^22.0.0",
+    "@types/which": "^3.0.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soroban-ops/soroban-state-ops",
+    "directory": "packages/lint-npm"
+  },
+  "keywords": ["soroban", "stellar", "lint", "storage", "ttl", "safety"]
+}

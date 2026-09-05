@@ -1,0 +1,33 @@
+name: Soroban State Safety Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-storage:
+    name: Lint Soroban Storage & TTL Policies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Soroban State Lint Action
+        uses: soroban-ops/state-lint-action@v1
+        with:
+          path: ./contracts
+          fail-on: error
+          format: sarif
+          output: results.sarif
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif

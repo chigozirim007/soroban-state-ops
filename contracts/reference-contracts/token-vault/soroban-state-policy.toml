@@ -1,0 +1,64 @@
+[policy]
+name = "reference-token-vault"
+version = "0.1.0"
+description = "Storage policy manifest for reference token vault contract"
+maintainer = "Soroban State Ops Team"
+
+[defaults.persistent_ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000
+target_ledgers = 535680
+
+[defaults.instance_ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000
+target_ledgers = 1000000
+
+[[state]]
+name = "Config"
+tier = "instance"
+key_schema = "Config"
+criticality = "critical"
+keeper_eligible = true
+privacy = "public"
+
+[state.ttl]
+mode = "keeper"
+threshold_ledgers = 100000
+target_ledgers = 1000000
+
+[state.recovery]
+strategy = "keeper-restore"
+keeper_eligible = true
+
+[[state]]
+name = "UserBalance"
+tier = "persistent"
+key_schema = "UserBalance(Address)"
+criticality = "critical"
+expected_cardinality = "unbounded"
+keeper_eligible = true
+privacy = "public"
+
+[state.ttl]
+mode = "bump-on-access"
+threshold_ledgers = 100000
+target_ledgers = 535680
+
+[state.recovery]
+strategy = "restore-on-demand"
+keeper_eligible = false
+
+[[state]]
+name = "RateCache"
+tier = "temporary"
+key_schema = "RateCache(Symbol)"
+criticality = "low"
+expected_cardinality = "small"
+keeper_eligible = false
+privacy = "public"
+notes = "Ephemeral exchange rate cache; discardable and reconstructible from price oracles."
+
+[state.recovery]
+strategy = "reconstructible"
+reconstruction_source = "Oracle Aggregator Contract"

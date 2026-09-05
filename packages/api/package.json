@@ -1,0 +1,37 @@
+{
+  "name": "@soroban-ops/api",
+  "version": "0.1.0",
+  "description": "Soroban state-ops REST API — contract registration, TTL snapshots, alerts, cost estimation",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run --pool=threads",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@soroban-ops/shared-types": "workspace:*",
+    "fastify": "^5.3.0",
+    "@fastify/cors": "^11.0.0",
+    "pg": "^8.16.0",
+    "pino": "^9.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soroban-ops/soroban-state-ops",
+    "directory": "packages/api"
+  }
+}

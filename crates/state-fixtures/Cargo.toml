@@ -1,0 +1,13 @@
+[package]
+name = "state-fixtures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Test contract fixtures for soroban-state-lint — intentionally unsafe and safe storage patterns"
+
+[dependencies]
+
+[dev-dependencies]
+state-lint-core = { path = "../state-lint-core" }
+state-policy = { path = "../state-policy" }

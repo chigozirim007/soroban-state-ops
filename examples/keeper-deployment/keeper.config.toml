@@ -1,0 +1,22 @@
+# Soroban State Ops — Keeper Service Configuration
+# Production & Staging Configuration Example
+
+rpc_url = "https://soroban-testnet.stellar.org"
+network_passphrase = "Test SDF Network ; September 2015"
+poll_interval_ms = 60000
+database_url = "postgresql://soroban_ops:dev_password_change_me@localhost:5432/soroban_state_ops"
+
+# Maximum cost budget guardrails
+max_cost_per_renewal = 5.0
+max_daily_spend = 100.0
+dry_run = false
+
+# Signer configuration (local-encrypted or webhook)
+signer_type = "local-encrypted"
+key_source = "./secrets/keeper-key.enc"
+passphrase_env = "KEEPER_KEY_PASSPHRASE"
+
+# For external enterprise KMS (Fireblocks, Turnkey, Vault), uncomment:
+# signer_type = "webhook"
+# webhook_endpoint = "https://kms.internal.company.com/v1/sign-xdr"
+# webhook_auth_env = "KMS_API_KEY"

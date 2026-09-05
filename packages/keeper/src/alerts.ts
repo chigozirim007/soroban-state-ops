@@ -4,6 +4,7 @@
 
 import type { Logger } from "pino";
 import type { AlertChannel } from "@soroban-ops/shared-types";
+import { type DbPool, insertAlert } from "./db.js";
 
 interface AlertPayload {
   alert_type: string;
@@ -22,7 +23,8 @@ const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 export class AlertDispatcher {
   constructor(
     private channels: AlertChannel[],
-    private logger: Logger
+    private logger: Logger,
+    private db?: DbPool
   ) {}
 
   /**
@@ -37,6 +39,23 @@ export class AlertDispatcher {
       return;
     }
     alertCooldowns.set(dedupeKey, Date.now());
+
+    // Record to database if pool provided
+    if (this.db) {
+      try {
+        await insertAlert(this.db, {
+          contract_id: payload.contract_id,
+          key_name: payload.key_name,
+          severity: payload.severity,
+          alert_type: payload.alert_type,
+          message: payload.message,
+          ttl_at_alert: payload.ttl_at_alert,
+          threshold: payload.threshold,
+        });
+      } catch (err) {
+        this.logger.error({ err }, "Failed to record alert to database");
+      }
+    }
 
     const severityRank = { low: 0, medium: 1, high: 2, critical: 3 };
     const payloadRank = severityRank[payload.severity as keyof typeof severityRank] ?? 0;

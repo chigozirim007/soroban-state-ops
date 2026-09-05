@@ -63,7 +63,10 @@ export class SorobanRpcClient {
       const contract = new Address(contractId);
 
       // Build the ledger key for the contract data entry
-      const scvKey = xdr.ScVal.scvSymbol(keySymbol);
+      // Soroban symbols are 1-32 alphanumeric/underscore characters
+      const scvKey = /^[a-zA-Z0-9_]{1,32}$/.test(keySymbol)
+        ? xdr.ScVal.scvSymbol(keySymbol)
+        : xdr.ScVal.scvString(keySymbol.slice(0, 64));
 
       const xdrDurability =
         durability === "temporary"

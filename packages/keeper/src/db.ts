@@ -123,12 +123,32 @@ export async function insertAlert(
   db: DbPool,
   alert: AlertInsert
 ): Promise<string> {
+  let contractUuid: string | null = null;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (uuidRegex.test(alert.contract_id)) {
+    contractUuid = alert.contract_id;
+  } else {
+    try {
+      const res = await db.query<{ id: string }>(
+        `SELECT id FROM contracts WHERE contract_id = $1 LIMIT 1`,
+        [alert.contract_id]
+      );
+      if (res.rows.length > 0) {
+        contractUuid = res.rows[0].id;
+      }
+    } catch {
+      // Ignore lookup error
+    }
+  }
+
   const result = await db.query<{ id: string }>(
     `INSERT INTO alerts (contract_id, key_name, severity, alert_type, message, ttl_at_alert, threshold, channel)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
     [
-      alert.contract_id,
+      contractUuid,
       alert.key_name,
       alert.severity,
       alert.alert_type,

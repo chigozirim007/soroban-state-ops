@@ -108,10 +108,14 @@ export class TtlRenewer {
         })
       );
     } else {
+      const scvKey = /^[a-zA-Z0-9_]{1,32}$/.test(decision.key_name)
+        ? xdr.ScVal.scvSymbol(decision.key_name)
+        : xdr.ScVal.scvString(decision.key_name.slice(0, 64));
+
       ledgerKey = xdr.LedgerKey.contractData(
         new xdr.LedgerKeyContractData({
           contract: contract.toScAddress(),
-          key: xdr.ScVal.scvSymbol(decision.key_name),
+          key: scvKey,
           durability,
         })
       );

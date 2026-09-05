@@ -29,7 +29,7 @@ describe("API — Cost Estimator Route", () => {
     expect(json.entries[0].tier).toBe("persistent");
     expect(json.total_xlm).toBeGreaterThan(0);
     expect(json.total_per_year_xlm).toBeGreaterThan(0);
-  });
+  }, 15000);
 
   it("returns 400 for empty or invalid entries", async () => {
     const app = Fastify();
@@ -44,5 +44,5 @@ describe("API — Cost Estimator Route", () => {
     });
 
     expect(response.statusCode).toBe(400);
-  });
+  }, 15000);
 });

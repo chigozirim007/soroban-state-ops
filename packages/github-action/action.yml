@@ -47,15 +47,44 @@ runs:
     - name: Install soroban-state-lint
       shell: bash
       run: |
-        if [ "${{ inputs.version }}" = "latest" ]; then
-          echo "Installing soroban-state-lint from crates.io..."
-          cargo install soroban-state-lint --locked || cargo install soroban-state-lint
-        else
-          echo "Installing soroban-state-lint@${{ inputs.version }}..."
-          cargo install soroban-state-lint --version "${{ inputs.version }}" --locked || \
-            cargo install soroban-state-lint --version "${{ inputs.version }}"
+        INSTALLED=false
+        if which soroban-state-lint >/dev/null 2>&1; then
+          echo "soroban-state-lint already installed at $(which soroban-state-lint)"
+          INSTALLED=true
         fi
-        echo "$(dirname $(which soroban-state-lint))" >> $GITHUB_PATH
+
+        if [ "$INSTALLED" = false ]; then
+          if [ "${{ inputs.version }}" = "latest" ]; then
+            echo "Attempting install from crates.io..."
+            cargo install soroban-state-lint --locked || cargo install soroban-state-lint || true
+          else
+            echo "Attempting install from crates.io version ${{ inputs.version }}..."
+            cargo install soroban-state-lint --version "${{ inputs.version }}" --locked || \
+              cargo install soroban-state-lint --version "${{ inputs.version }}" || true
+          fi
+        fi
+
+        if ! which soroban-state-lint >/dev/null 2>&1; then
+          echo "crates.io package not found or failed, checking for local crates or git repository fallback..."
+          if [ -d "crates/soroban-state-lint" ]; then
+            echo "Found local crates/soroban-state-lint, installing from local path..."
+            cargo install --path crates/soroban-state-lint
+          elif [ -d "../crates/soroban-state-lint" ]; then
+            echo "Found ../crates/soroban-state-lint, installing from local path..."
+            cargo install --path ../crates/soroban-state-lint
+          else
+            echo "Installing from git repository..."
+            cargo install --git https://github.com/chigozirim007/soroban-state-ops soroban-state-lint || true
+          fi
+        fi
+
+        if which soroban-state-lint >/dev/null 2>&1; then
+          echo "$(dirname $(which soroban-state-lint))" >> $GITHUB_PATH
+          echo "soroban-state-lint is ready: $(which soroban-state-lint)"
+        else
+          echo "ERROR: Could not install or locate soroban-state-lint binary."
+          exit 1
+        fi
 
     - name: Run soroban-state-lint
       id: lint

@@ -50,9 +50,9 @@ async function main(): Promise<void> {
   logger.info({ publicKey, signerType: config.signer.type }, "Signer initialized");
 
   // 5. Initialize components
-  const alertDispatcher = new AlertDispatcher(config.alert_channels, logger);
+  const alertDispatcher = new AlertDispatcher(config.alert_channels, logger, db);
   const scheduler = new JobScheduler(db, logger);
-  const observer = new TtlObserver(db, rpc, logger);
+  const observer = new TtlObserver(db, rpc, logger, alertDispatcher);
   const renewer = new TtlRenewer(db, rpc, signer, scheduler, alertDispatcher, config, logger);
 
   // 6. Main polling loop

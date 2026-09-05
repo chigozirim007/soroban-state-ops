@@ -97,7 +97,7 @@ CREATE INDEX idx_snapshots_health ON ttl_snapshots (health_score) WHERE health_s
 
 CREATE TABLE alerts (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contract_id     UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+    contract_id     UUID REFERENCES contracts(id) ON DELETE CASCADE,
     key_name        VARCHAR(256) NOT NULL,
     severity        criticality NOT NULL DEFAULT 'medium',
     alert_type      alert_type NOT NULL,

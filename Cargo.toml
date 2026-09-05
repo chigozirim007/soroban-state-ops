@@ -6,6 +6,9 @@ members = [
     "crates/soroban-state-lint",
     "crates/state-fixtures",
 ]
+exclude = [
+    "contracts/reference-contracts/token-vault",
+]
 
 [workspace.package]
 version = "0.1.0"

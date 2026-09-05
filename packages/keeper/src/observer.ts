@@ -5,6 +5,7 @@
 import type { Logger } from "pino";
 import type { TtlObservation, RenewalDecision } from "@soroban-ops/shared-types";
 import type { SorobanRpcClient, TtlInfo } from "./rpc.js";
+import type { AlertDispatcher } from "./alerts.js";
 import {
   type DbPool,
   getWatchedContracts,
@@ -19,7 +20,8 @@ export class TtlObserver {
   constructor(
     private db: DbPool,
     private rpc: SorobanRpcClient,
-    private logger: Logger
+    private logger: Logger,
+    private alerts?: AlertDispatcher
   ) {}
 
   /**
@@ -79,6 +81,32 @@ export class TtlObserver {
             health_score: healthScore,
             criticality: key.criticality,
           });
+
+          // Dispatch proactive alerts when state approaches expiry
+          if (this.alerts) {
+            if (ttlInfo.remainingLedgers <= 0) {
+              await this.alerts.dispatch({
+                alert_type: "state_archived",
+                severity: "critical",
+                message: `State entry '${key.key_name}' on ${contract.name} has archived! TTL is 0 ledgers.`,
+                contract_id: contract.contract_id,
+                key_name: key.key_name,
+                ttl_at_alert: 0,
+                threshold: key.threshold_ledgers,
+              });
+            } else if (ttlInfo.remainingLedgers < key.threshold_ledgers) {
+              const isEmergency = healthScore < 0.3 || ttlInfo.remainingLedgers < 10_000;
+              await this.alerts.dispatch({
+                alert_type: isEmergency ? "ttl_critical" : "ttl_below_threshold",
+                severity: isEmergency ? "critical" : (key.criticality === "critical" ? "high" : "medium"),
+                message: `TTL for '${key.key_name}' on ${contract.name} is at ${ttlInfo.remainingLedgers.toLocaleString()} ledgers (threshold: ${key.threshold_ledgers.toLocaleString()})`,
+                contract_id: contract.contract_id,
+                key_name: key.key_name,
+                ttl_at_alert: ttlInfo.remainingLedgers,
+                threshold: key.threshold_ledgers,
+              });
+            }
+          }
         } catch (err) {
           this.logger.error(
             { err, contract: contract.name, key: key.key_name },

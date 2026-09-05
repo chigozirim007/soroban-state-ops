@@ -1,5 +1,8 @@
 # Build artifacts
-/target/
+target/
+**/target/
+test_snapshots/
+**/test_snapshots/
 node_modules/
 dist/
 **/dist/

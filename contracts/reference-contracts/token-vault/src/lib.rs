@@ -88,20 +88,17 @@ impl ReferenceTokenVault {
             .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_TARGET);
     }
 
-    /// Read user balance and bump TTL.
+    /// Read user balance and bump TTL if the key exists.
     pub fn get_balance(env: Env, user: Address) -> i128 {
         let key = DataKey::UserBalance(user);
-        let balance: i128 = env
-            .storage()
-            .persistent()
-            .get(&key)
-            .unwrap_or(0);
-
-        env.storage()
-            .persistent()
-            .extend_ttl(&key, PERSISTENT_TTL_THRESHOLD, PERSISTENT_TTL_TARGET);
-
-        balance
+        if let Some(balance) = env.storage().persistent().get(&key) {
+            env.storage()
+                .persistent()
+                .extend_ttl(&key, PERSISTENT_TTL_THRESHOLD, PERSISTENT_TTL_TARGET);
+            balance
+        } else {
+            0
+        }
     }
 
     /// Cache an exchange rate quote in temporary storage.
@@ -120,3 +117,7 @@ impl ReferenceTokenVault {
         env.storage().temporary().set(&key, &quote);
     }
 }
+
+#[cfg(test)]
+mod test;
+

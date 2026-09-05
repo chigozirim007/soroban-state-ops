@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "postinstall": "node -e \"try{require('./dist/install.js')}catch(e){}\"",
+    "postinstall": "node -e \"import('./dist/install.js').catch(()=>{})\"",
     "test": "vitest run --pool=threads"
   },
   "dependencies": {

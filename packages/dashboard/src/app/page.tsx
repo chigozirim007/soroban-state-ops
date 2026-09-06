@@ -3,19 +3,25 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MonitoredContract, AlertItem } from "../lib/types";
-import { fetchContracts, fetchAlerts } from "../lib/api";
+import { fetchContracts, fetchAlerts, fetchDashboardSummary, DashboardSummaryData } from "../lib/api";
 
 export default function OverviewPage() {
   const [contracts, setContracts] = useState<MonitoredContract[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [summary, setSummary] = useState<DashboardSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
-      const [c, a] = await Promise.all([fetchContracts(), fetchAlerts()]);
+      const [c, a, s] = await Promise.all([
+        fetchContracts(),
+        fetchAlerts(),
+        fetchDashboardSummary(),
+      ]);
       setContracts(c);
       setAlerts(a);
+      setSummary(s);
       setLoading(false);
     }
     loadData();
@@ -75,11 +81,11 @@ export default function OverviewPage() {
           </span>
           <span style={{ color: "var(--border-default)" }}>|</span>
           <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Current Ledger: <span className="mono" style={{ color: "var(--text-primary)" }}>#3,126,450</span>
+            Telemetry: <span className="mono" style={{ color: "var(--text-primary)" }}>{summary?.last_snapshot_at ? new Date(summary.last_snapshot_at).toLocaleTimeString() : "Live Polling"}</span>
           </span>
           <span style={{ color: "var(--border-default)" }}>|</span>
           <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Ledger Interval: <span className="mono">~5.1s</span>
+            Ledger Interval: <span className="mono">~5.0s</span>
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", fontSize: "0.8rem" }}>
@@ -130,10 +136,14 @@ export default function OverviewPage() {
         </div>
 
         <div className="card stat-card animate-in-delay-4">
-          <div className="stat-label">Automated Renewals (24h)</div>
-          <div className="stat-value">14</div>
+          <div className="stat-label">Pending Keeper Jobs</div>
+          <div className="stat-value">{summary ? summary.pending_jobs : 0}</div>
           <div className="stat-sub">
-            <span style={{ color: "var(--color-healthy)" }}>100% success rate</span> (0.07 XLM gas)
+            <span style={{ color: "var(--color-healthy)" }}>
+              {summary && summary.total_renewal_cost_xlm > 0
+                ? `${summary.total_renewal_cost_xlm.toFixed(4)} XLM confirmed`
+                : "Queue active"}
+            </span>
           </div>
         </div>
       </div>

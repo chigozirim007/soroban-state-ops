@@ -39,6 +39,8 @@ fn diagnostic_to_sarif_result(diag: &Diagnostic) -> Value {
         Severity::Info => "note",
     };
 
+    let normalized_file = diag.file.replace('\\', "/");
+
     let mut result = json!({
         "ruleId": diag.rule_id,
         "level": level,
@@ -49,7 +51,7 @@ fn diagnostic_to_sarif_result(diag: &Diagnostic) -> Value {
             {
                 "physicalLocation": {
                     "artifactLocation": {
-                        "uri": diag.file
+                        "uri": normalized_file
                     },
                     "region": {
                         "startLine": diag.line,

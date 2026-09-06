@@ -124,19 +124,12 @@ fn run_check(
             .map_err(|e| anyhow::anyhow!("Failed to load policy: {}", e))?;
         Some(doc)
     } else {
-        let policy_dir = if path.is_file() {
+        let start_dir = if path.is_file() {
             path.parent().unwrap_or_else(|| std::path::Path::new("."))
         } else {
             path.as_path()
         };
-        // Try to find a default policy file
-        let default_paths = [
-            policy_dir.join("soroban-state-policy.toml"),
-            policy_dir.join(".soroban-state-policy.toml"),
-        ];
-        default_paths
-            .iter()
-            .find_map(|p| state_policy::parse_policy_file(p).ok())
+        find_policy_manifest(start_dir)
     };
 
     // Configure analyzer
@@ -280,4 +273,29 @@ fn print_rules() {
         "   {} rules total\n",
         rules.len().to_string().white().bold()
     );
+}
+
+fn find_policy_manifest(start_dir: &std::path::Path) -> Option<state_policy::PolicyDocument> {
+    let mut current = if start_dir.is_relative() {
+        std::env::current_dir().unwrap_or_default().join(start_dir)
+    } else {
+        start_dir.to_path_buf()
+    };
+    loop {
+        let candidates = [
+            current.join("soroban-state-policy.toml"),
+            current.join(".soroban-state-policy.toml"),
+        ];
+        for candidate in &candidates {
+            if candidate.exists() {
+                if let Ok(doc) = state_policy::parse_policy_file(candidate) {
+                    return Some(doc);
+                }
+            }
+        }
+        if !current.pop() {
+            break;
+        }
+    }
+    None
 }

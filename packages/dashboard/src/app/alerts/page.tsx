@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertItem } from "../../lib/types";
-import { fetchAlerts } from "../../lib/api";
+import { fetchAlerts, acknowledgeAlert, resolveAlert } from "../../lib/api";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
@@ -18,20 +18,22 @@ export default function AlertsPage() {
     load();
   }, []);
 
-  const handleAcknowledge = (id: string) => {
+  const handleAcknowledge = async (id: string) => {
     setAlerts(
       alerts.map((a) =>
         a.id === id ? { ...a, acknowledged: true, status: "acknowledged" } : a
       )
     );
+    await acknowledgeAlert(id);
   };
 
-  const handleResolve = (id: string) => {
+  const handleResolve = async (id: string) => {
     setAlerts(
       alerts.map((a) =>
         a.id === id ? { ...a, status: "resolved" } : a
       )
     );
+    await resolveAlert(id);
   };
 
   const filteredAlerts = alerts.filter((a) => {

@@ -176,3 +176,97 @@ export function calculateStorageCost(input: CostCalculationInput): CostCalculati
     totalAnnualCostXlm,
   };
 }
+
+export async function registerContract(data: {
+  contract_id: string;
+  name: string;
+  network: string;
+  policy_toml?: string;
+  tags?: string[];
+}): Promise<{ success: boolean; contract?: any; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/contracts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return { success: true, contract: json.contract };
+    }
+    const err = await res.json().catch(() => ({}));
+    return { success: false, error: err.error?.message || err.error || "Failed to register contract" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+export async function deleteContract(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/contracts/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      return { success: true };
+    }
+    const err = await res.json().catch(() => ({}));
+    return { success: false, error: err.error || "Failed to delete contract" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+export async function renewContractKey(
+  contractId: string,
+  keyName: string,
+  targetLedgers?: number
+): Promise<{ success: boolean; job?: any; message?: string; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/contracts/${contractId}/renew`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key_name: keyName, target_ledgers: targetLedgers }),
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return { success: true, job: json.job, message: json.message };
+    }
+    const err = await res.json().catch(() => ({}));
+    return { success: false, error: err.error || "Failed to queue renewal job" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+export async function acknowledgeAlert(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alerts/acknowledge/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acknowledged_by: "dashboard-user" }),
+    });
+    if (res.ok) {
+      return { success: true };
+    }
+    return { success: false, error: "Failed to acknowledge alert" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+
+export async function resolveAlert(id: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/alerts/resolve/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resolved_by: "dashboard-user" }),
+    });
+    if (res.ok) {
+      return { success: true };
+    }
+    return { success: false, error: "Failed to resolve alert" };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error" };
+  }
+}
+

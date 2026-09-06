@@ -61,7 +61,15 @@ async function main(): Promise<void> {
     "Starting polling loop"
   );
 
+  let isPolling = false;
+
   const poll = async (): Promise<void> => {
+    if (isPolling) {
+      logger.debug("Previous poll cycle still in progress — skipping overlapping run");
+      return;
+    }
+    isPolling = true;
+
     try {
       // Observe TTLs for all watched contracts
       const observations = await observer.observe();
@@ -99,6 +107,8 @@ async function main(): Promise<void> {
         contract_id: "system",
         key_name: "polling",
       });
+    } finally {
+      isPolling = false;
     }
   };
 

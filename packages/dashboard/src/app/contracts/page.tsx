@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MonitoredContract } from "../../lib/types";
-import { fetchContracts } from "../../lib/api";
+import { fetchContracts, registerContract, deleteContract } from "../../lib/api";
 
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<MonitoredContract[]>([]);
@@ -11,6 +11,8 @@ export default function ContractsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [networkFilter, setNetworkFilter] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Form state for adding a contract
   const [newAddress, setNewAddress] = useState("");
@@ -25,44 +27,36 @@ export default function ContractsPage() {
     load();
   }, []);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAddress || !newName) return;
 
-    const newContract: MonitoredContract = {
-      id: "C" + Math.random().toString(36).substring(2, 11).toUpperCase(),
+    setSubmitting(true);
+    setErrorMessage(null);
+
+    const res = await registerContract({
+      contract_id: newAddress,
       name: newName,
       network: newNetwork,
-      address: newAddress,
-      status: "healthy",
-      totalKeys: 1,
-      persistentKeys: 1,
-      temporaryKeys: 0,
-      instanceKeys: 0,
-      minTtlLedgers: 535680,
-      avgTtlLedgers: 535680,
-      lastCheckTime: "Just now",
-      nextRenewalEstimated: "in 31 days",
-      keys: [
-        {
-          keyName: "ContractConfig",
-          tier: "persistent",
-          currentTtlLedgers: 535680,
-          thresholdLedgers: 100000,
-          targetLedgers: 535680,
-          criticality: "high",
-          mode: "keeper",
-          valueSizeBytes: 128,
-          health: "healthy",
-          estimatedExpiryDate: "2026-10-06",
-        },
-      ],
-    };
+    });
 
-    setContracts([newContract, ...contracts]);
-    setShowModal(false);
-    setNewAddress("");
-    setNewName("");
+    setSubmitting(false);
+
+    if (res.success) {
+      const updated = await fetchContracts();
+      setContracts(updated);
+      setShowModal(false);
+      setNewAddress("");
+      setNewName("");
+    } else {
+      setErrorMessage(res.error || "Failed to register contract");
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to stop monitoring ${name}?`)) return;
+    await deleteContract(id);
+    setContracts(contracts.filter((c) => c.id !== id && c.address !== id));
   };
 
   const filteredContracts = contracts.filter((c) => {
@@ -222,9 +216,19 @@ export default function ContractsPage() {
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Checked {c.lastCheckTime}</div>
                     </td>
                     <td>
-                      <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>
-                        Inspect State →
-                      </Link>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>
+                          Inspect State →
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(c.id, c.name)}
+                          className="btn btn-ghost"
+                          style={{ padding: "4px 8px", fontSize: "0.8rem", color: "var(--color-critical)" }}
+                          title={`Stop watching ${c.name}`}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -335,12 +339,18 @@ export default function ContractsPage() {
                 </select>
               </div>
 
+              {errorMessage && (
+                <div style={{ color: "var(--color-critical)", fontSize: "0.85rem", background: "rgba(255, 68, 68, 0.1)", padding: "var(--space-sm)", borderRadius: "var(--radius-sm)" }}>
+                  {errorMessage}
+                </div>
+              )}
+
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-sm)", marginTop: "var(--space-md)" }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn btn-ghost">
+                <button type="button" onClick={() => setShowModal(false)} className="btn btn-ghost" disabled={submitting}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Start Watching
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? "Registering..." : "Start Watching"}
                 </button>
               </div>
             </form>

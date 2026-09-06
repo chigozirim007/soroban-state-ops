@@ -107,4 +107,48 @@ export async function registerAlertRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.send({ acknowledged: result.rows.length });
   });
+
+  // Resolve an alert
+  app.post<{
+    Params: { id: string };
+    Body: { resolved_by?: string };
+  }>("/api/alerts/resolve/:id", async (request, reply) => {
+    const { id } = request.params;
+    const resolvedBy = (request.body as any)?.resolved_by ?? "api-user";
+
+    const result = await db.query(
+      `UPDATE alerts
+       SET acknowledged = TRUE, acknowledged_by = $2, acknowledged_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [id, resolvedBy]
+    );
+
+    if (result.rows.length === 0) {
+      return reply.status(404).send({ error: "Alert not found" });
+    }
+
+    return reply.send({ alert: result.rows[0], resolved: true });
+  });
+
+  // Bulk resolve alerts
+  app.post<{
+    Body: { alert_ids: string[]; resolved_by?: string };
+  }>("/api/alerts/resolve-bulk", async (request, reply) => {
+    const { alert_ids, resolved_by = "api-user" } = request.body as any;
+
+    if (!Array.isArray(alert_ids) || alert_ids.length === 0) {
+      return reply.status(400).send({ error: "alert_ids array required" });
+    }
+
+    const result = await db.query(
+      `UPDATE alerts
+       SET acknowledged = TRUE, acknowledged_by = $2, acknowledged_at = NOW()
+       WHERE id = ANY($1)
+       RETURNING id`,
+      [alert_ids, resolved_by]
+    );
+
+    return reply.send({ resolved: result.rows.length });
+  });
 }

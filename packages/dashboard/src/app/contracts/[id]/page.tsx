@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { MonitoredContract, StateKeyEntry } from "../../../lib/types";
-import { fetchContractById } from "../../../lib/api";
+import { fetchContractById, renewContractKey } from "../../../lib/api";
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -21,17 +21,23 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     load();
   }, [resolvedParams.id]);
 
-  const handleManualBump = (keyName: string) => {
+  const handleManualBump = async (keyName: string) => {
     setBumpingKey(keyName);
-    setTimeout(() => {
-      setBumpingKey(null);
-      setBumpSuccess(`Successfully bumped TTL for ${keyName} to 535,680 ledgers! (tx: 0x9a8f...31c4)`);
+    setBumpSuccess(null);
+
+    const res = await renewContractKey(resolvedParams.id, keyName);
+    setBumpingKey(null);
+
+    if (res.success) {
+      setBumpSuccess(
+        `✅ Renewal job queued for ${keyName}! Job ID: ${res.job?.id?.slice(0, 8) ?? "created"}. Keeper daemon will execute it on-chain.`
+      );
       if (contract) {
         const updatedKeys: StateKeyEntry[] = contract.keys.map((k) => {
           if (k.keyName === keyName) {
             return {
               ...k,
-              currentTtlLedgers: 535680,
+              currentTtlLedgers: Math.max(k.currentTtlLedgers, k.targetLedgers || 535680),
               health: "healthy",
               lastRenewedAt: new Date().toISOString(),
             };
@@ -40,15 +46,12 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         });
         setContract({
           ...contract,
-          status: updatedKeys.some((k) => k.health === "critical")
-            ? "critical"
-            : updatedKeys.some((k) => k.health === "warning")
-            ? "warning"
-            : "healthy",
           keys: updatedKeys,
         });
       }
-    }, 1200);
+    } else {
+      setBumpSuccess(`⚠️ Could not queue renewal: ${res.error}`);
+    }
   };
 
   if (loading) {

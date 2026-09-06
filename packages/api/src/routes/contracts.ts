@@ -149,11 +149,51 @@ export async function registerContractRoutes(app: FastifyInstance): Promise<void
     return reply.status(201).send({ contract: result.rows[0] });
   });
 
+  // Queue manual TTL renewal job for a contract key
+  app.post<{
+    Params: { id: string };
+    Body: { key_name: string; target_ledgers?: number; action?: string };
+  }>("/api/contracts/:id/renew", async (request, reply) => {
+    const { id } = request.params;
+    const body = (request.body as any) || {};
+    const key_name = body.key_name;
+    const action = body.action || "extend_ttl";
+
+    if (!key_name) {
+      return reply.status(400).send({ error: "key_name is required" });
+    }
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const contractResult = await db.query(
+      `SELECT id, contract_id, name FROM contracts WHERE ${isUuid ? "id = $1" : "contract_id = $1"}`,
+      [id]
+    );
+
+    if (contractResult.rows.length === 0) {
+      return reply.status(404).send({ error: "Contract not found" });
+    }
+
+    const contractRow = contractResult.rows[0];
+
+    const jobResult = await db.query(
+      `INSERT INTO keeper_jobs (contract_id, key_name, action, priority, status, scheduled_at)
+       VALUES ($1, $2, $3, 90, 'pending', NOW())
+       RETURNING *`,
+      [contractRow.id, key_name, action]
+    );
+
+    return reply.status(201).send({
+      job: jobResult.rows[0],
+      message: `Renewal job queued for ${key_name} on ${contractRow.name}`,
+    });
+  });
+
   // Delete a contract
   app.delete<{ Params: { id: string } }>("/api/contracts/:id", async (request, reply) => {
     const { id } = request.params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     const result = await db.query(
-      `DELETE FROM contracts WHERE id = $1 RETURNING id`,
+      `DELETE FROM contracts WHERE ${isUuid ? "id = $1" : "contract_id = $1"} RETURNING id`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -162,3 +202,4 @@ export async function registerContractRoutes(app: FastifyInstance): Promise<void
     return reply.send({ deleted: true });
   });
 }
+

@@ -71,7 +71,9 @@ export class TtlRenewer {
   /**
    * Execute a single TTL renewal.
    */
-  private async executeRenewal(decision: RenewalDecision): Promise<void> {
+  private async executeRenewal(
+    decision: RenewalDecision
+  ): Promise<{ txHash: string; feeChargedStroops: number }> {
     this.logger.info(
       {
         contract: decision.contract_id,
@@ -108,9 +110,19 @@ export class TtlRenewer {
         })
       );
     } else {
-      const scvKey = /^[a-zA-Z0-9_]{1,32}$/.test(decision.key_name)
-        ? xdr.ScVal.scvSymbol(decision.key_name)
-        : xdr.ScVal.scvString(decision.key_name.slice(0, 64));
+      let scvKey: xdr.ScVal;
+      try {
+        // Try parsing base64 or hex XDR ScVal for compound keys
+        scvKey = xdr.ScVal.fromXDR(decision.key_name, "base64");
+      } catch {
+        try {
+          scvKey = xdr.ScVal.fromXDR(decision.key_name, "hex");
+        } catch {
+          scvKey = /^[a-zA-Z0-9_]{1,32}$/.test(decision.key_name)
+            ? xdr.ScVal.scvSymbol(decision.key_name)
+            : xdr.ScVal.scvString(decision.key_name.slice(0, 64));
+        }
+      }
 
       ledgerKey = xdr.LedgerKey.contractData(
         new xdr.LedgerKeyContractData({
@@ -205,6 +217,11 @@ export class TtlRenewer {
         contract_id: decision.contract_id,
         key_name: decision.key_name,
       });
+
+      return {
+        txHash: sendResponse.hash,
+        feeChargedStroops: 100,
+      };
     } else {
       throw new Error(`Transaction failed with status: ${getResponse.status}`);
     }
@@ -233,8 +250,8 @@ export class TtlRenewer {
         priority: 50,
       };
 
-      await this.executeRenewal(decision);
-      await completeJob(this.db, job.id, "", 0);
+      const result = await this.executeRenewal(decision);
+      await completeJob(this.db, job.id, result.txHash, result.feeChargedStroops);
     } catch (err) {
       await failJob(this.db, job.id, (err as Error).message);
       throw err;

@@ -9,6 +9,7 @@
  * 5. Dispatches alerts via configured channels
  */
 
+import http from "node:http";
 import pino from "pino";
 import { loadConfig } from "./config.js";
 import { createDbPool } from "./db.js";
@@ -118,9 +119,20 @@ async function main(): Promise<void> {
   // Recurring interval
   setInterval(poll, config.poll_interval_ms);
 
+  // Start optional HTTP health server (allows deployment as Render/Cloud Web Service)
+  const healthPort = Number(process.env.PORT ?? process.env.KEEPER_HEALTH_PORT ?? 8080);
+  const healthServer = http.createServer((_req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", service: "soroban-ops-keeper" }));
+  });
+  healthServer.listen(healthPort, "0.0.0.0", () => {
+    logger.info({ port: healthPort }, "Keeper health server listening");
+  });
+
   // Graceful shutdown
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, "Shutting down keeper...");
+    healthServer.close();
     await db.end();
     if (signer.close) await signer.close();
     process.exit(0);

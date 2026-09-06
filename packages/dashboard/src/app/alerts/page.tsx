@@ -3,17 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertItem } from "../../lib/types";
-import { fetchAlerts, acknowledgeAlert, resolveAlert } from "../../lib/api";
+import { fetchAlerts, acknowledgeAlert, resolveAlert, fetchDashboardSummary, DashboardSummaryData } from "../../lib/api";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [summary, setSummary] = useState<DashboardSummaryData | null>(null);
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     async function load() {
-      const data = await fetchAlerts();
+      const [data, sum] = await Promise.all([
+        fetchAlerts(),
+        fetchDashboardSummary(),
+      ]);
       setAlerts(data);
+      setSummary(sum);
     }
     load();
   }, []);
@@ -44,6 +49,7 @@ export default function AlertsPage() {
 
   const activeCount = alerts.filter((a) => a.status === "active").length;
   const criticalCount = alerts.filter((a) => a.severity === "critical" && a.status === "active").length;
+  const activeChannels = summary?.active_channels ?? ["log"];
 
   return (
     <div className="animate-in">
@@ -77,8 +83,8 @@ export default function AlertsPage() {
 
         <div className="card stat-card">
           <div className="stat-label">Dispatch Channels</div>
-          <div className="stat-value">3 / 3</div>
-          <div className="stat-sub">Slack, PagerDuty, Webhook connected</div>
+          <div className="stat-value">{activeChannels.length} Active</div>
+          <div className="stat-sub">{activeChannels.join(", ")} enabled</div>
         </div>
       </div>
 
@@ -135,7 +141,17 @@ export default function AlertsPage() {
       {/* Alerts Feed */}
       <div className="card" style={{ marginBottom: "var(--space-2xl)" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
-          {filteredAlerts.length === 0 ? (
+          {alerts.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "var(--space-2xl)", color: "var(--text-secondary)" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "var(--space-sm)" }}>✅</div>
+              <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--color-healthy)", marginBottom: "var(--space-xs)" }}>
+                All Systems Nominal
+              </div>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", maxWidth: 440, margin: "0 auto", lineHeight: 1.5 }}>
+                No active TTL warnings or archival threats detected. The Keeper daemon is actively monitoring on-chain storage buffers.
+              </p>
+            </div>
+          ) : filteredAlerts.length === 0 ? (
             <div style={{ textAlign: "center", padding: "var(--space-2xl)", color: "var(--text-muted)" }}>
               No alerts found matching current filters.
             </div>
@@ -229,43 +245,62 @@ export default function AlertsPage() {
       <h2 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "var(--space-md)" }}>
         Configured Dispatch Channels
       </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--space-lg)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "var(--space-lg)" }}>
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
-            <span style={{ fontWeight: 600 }}>💬 Slack Webhook</span>
+            <span style={{ fontWeight: 600 }}>📝 System Logger</span>
             <span className="badge badge-healthy">Active</span>
           </div>
           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "var(--space-sm)" }}>
-            Posts rich block notifications to <span className="mono">#soroban-alerts</span> when TTL enters warning threshold.
+            Structured JSON logging via Pino to stdout/stderr. Always enabled as base fallback.
           </p>
           <div className="mono" style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-            Webhook: https://hooks.slack.com/services/T01...
+            Channel: stdout/json
+          </div>
+        </div>
+
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
+            <span style={{ fontWeight: 600 }}>💬 Slack Webhook</span>
+            <span className={`badge ${activeChannels.includes("slack") ? "badge-healthy" : "badge-tier"}`}>
+              {activeChannels.includes("slack") ? "Active" : "Not Set"}
+            </span>
+          </div>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "var(--space-sm)" }}>
+            Posts rich block notifications to Slack when contract TTL enters warning threshold.
+          </p>
+          <div className="mono" style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+            {activeChannels.includes("slack") ? "Connected via SLACK_WEBHOOK_URL" : "Set SLACK_WEBHOOK_URL to enable"}
           </div>
         </div>
 
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
             <span style={{ fontWeight: 600 }}>📟 PagerDuty Events v2</span>
-            <span className="badge badge-healthy">Active</span>
+            <span className={`badge ${activeChannels.includes("pagerduty") ? "badge-healthy" : "badge-tier"}`}>
+              {activeChannels.includes("pagerduty") ? "Active" : "Not Set"}
+            </span>
           </div>
           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "var(--space-sm)" }}>
-            Triggers high-urgency incidents when any critical tier state drops below emergency threshold.
+            Triggers high-urgency incidents when critical state drops below emergency threshold.
           </p>
           <div className="mono" style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-            Routing Key: pd-live-prod-38910...
+            {activeChannels.includes("pagerduty") ? "Connected via PAGERDUTY_ROUTING_KEY" : "Set PAGERDUTY_ROUTING_KEY to enable"}
           </div>
         </div>
 
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
             <span style={{ fontWeight: 600 }}>🔗 Custom Webhook</span>
-            <span className="badge badge-healthy">Active</span>
+            <span className={`badge ${activeChannels.includes("webhook") ? "badge-healthy" : "badge-tier"}`}>
+              {activeChannels.includes("webhook") ? "Active" : "Not Set"}
+            </span>
           </div>
           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "var(--space-sm)" }}>
-            Sends signed HMAC payloads for automated DevOps, Discord bots, or SIEM pipelines.
+            Sends signed payloads for automated DevOps, Discord bots, or SIEM pipelines.
           </p>
           <div className="mono" style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-            Endpoint: https://ops.internal/webhooks/ttl
+            {activeChannels.includes("webhook") ? "Connected via ALERT_WEBHOOK_URL" : "Set ALERT_WEBHOOK_URL to enable"}
           </div>
         </div>
       </div>

@@ -144,9 +144,48 @@ export async function registerContractRoutes(app: FastifyInstance): Promise<void
           ]
         );
       }
+    } else {
+      // Auto-provision a default ContractInstance key so the keeper can immediately observe instance TTL
+      await db.query(
+        `INSERT INTO state_keys (contract_id, key_name, tier, criticality, ttl_mode, threshold_ledgers, target_ledgers, keeper_eligible, key_schema, notes)
+         VALUES ($1, 'ContractInstance', 'instance', 'high', 'keeper', 100000, 535680, TRUE, 'ContractInstance', 'Auto-provisioned instance TTL key')
+         ON CONFLICT (contract_id, key_name) DO NOTHING`,
+        [result.rows[0].id]
+      );
     }
 
     return reply.status(201).send({ contract: result.rows[0] });
+  });
+
+  // Get recent keeper jobs for a specific contract
+  app.get<{ Params: { id: string } }>("/api/contracts/:id/jobs", async (request, reply) => {
+    const { id } = request.params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const contractResult = await db.query(
+      `SELECT id FROM contracts WHERE ${isUuid ? "id = $1" : "contract_id = $1"}`,
+      [id]
+    );
+    if (contractResult.rows.length === 0) {
+      return reply.status(404).send({ error: "Contract not found" });
+    }
+    const contractId = contractResult.rows[0].id;
+    const jobs = await db.query(
+      `SELECT * FROM keeper_jobs WHERE contract_id = $1 ORDER BY created_at DESC LIMIT 50`,
+      [contractId]
+    );
+    return reply.send({ jobs: jobs.rows });
+  });
+
+  // Get all recent keeper jobs across contracts
+  app.get("/api/jobs", async (_request, reply) => {
+    const jobs = await db.query(
+      `SELECT kj.*, c.name as contract_name, c.contract_id as stellar_contract_id
+       FROM keeper_jobs kj
+       LEFT JOIN contracts c ON c.id = kj.contract_id
+       ORDER BY kj.created_at DESC
+       LIMIT 50`
+    );
+    return reply.send({ jobs: jobs.rows });
   });
 
   // Queue manual TTL renewal job for a contract key

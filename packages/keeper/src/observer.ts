@@ -38,7 +38,27 @@ export class TtlObserver {
         "Observing contract"
       );
 
-      for (const key of contract.keys) {
+      const keysToObserve: StateKeyRow[] =
+        contract.keys.length > 0
+          ? contract.keys
+          : [
+              {
+                id: "default-instance",
+                contract_id: contract.id,
+                key_name: "ContractInstance",
+                tier: "instance",
+                criticality: "high",
+                ttl_mode: "keeper",
+                threshold_ledgers: 100000,
+                target_ledgers: 535680,
+                keeper_eligible: true,
+                key_schema: "ContractInstance",
+                notes: "Default instance TTL",
+                created_at: new Date(),
+              },
+            ];
+
+      for (const key of keysToObserve) {
         try {
           const ttlInfo = await this.queryTtl(contract.contract_id, key);
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SidebarNav } from "./sidebar-nav";
 
 export const metadata: Metadata = {
   title: "Soroban State Ops — Storage Lifecycle Dashboard",
@@ -22,25 +23,7 @@ export default function RootLayout({
               <span>State Ops</span>
             </div>
 
-            <nav className="nav-section">
-              <span className="nav-label">Monitor</span>
-              <a href="/" className="nav-link active">
-                📊 Overview
-              </a>
-              <a href="/contracts" className="nav-link">
-                📋 Contracts
-              </a>
-              <a href="/alerts" className="nav-link">
-                🔔 Alerts
-              </a>
-            </nav>
-
-            <nav className="nav-section">
-              <span className="nav-label">Tools</span>
-              <a href="/cost" className="nav-link">
-                💰 Cost Estimator
-              </a>
-            </nav>
+            <SidebarNav />
 
             <div style={{ marginTop: "auto" }}>
               <div

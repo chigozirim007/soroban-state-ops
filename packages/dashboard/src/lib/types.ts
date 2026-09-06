@@ -71,3 +71,20 @@ export interface CostCalculationResult {
   annualRenewalFeeXlm: number;
   totalAnnualCostXlm: number;
 }
+
+export interface KeeperJobItem {
+  id: string;
+  contract_id: string;
+  key_name: string;
+  action: string;
+  status: "pending" | "claimed" | "submitted" | "confirmed" | "failed" | "retrying";
+  tx_hash?: string | null;
+  cost_stroops?: number | null;
+  cost_xlm?: number | null;
+  error?: string | null;
+  priority: number;
+  scheduled_at: string;
+  executed_at?: string | null;
+  created_at: string;
+  contract_name?: string;
+}

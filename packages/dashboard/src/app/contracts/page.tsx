@@ -170,10 +170,25 @@ export default function ContractsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredContracts.length === 0 ? (
+              {contracts.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-2xl)" }}>
-                    No contracts matching criteria.
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-md)" }}>
+                      <span style={{ fontSize: "2.5rem" }}>📋</span>
+                      <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>No Contracts in Registry</div>
+                      <p style={{ color: "var(--text-muted)", maxWidth: 460, fontSize: "0.85rem", lineHeight: 1.5 }}>
+                        Start monitoring Soroban contracts by registering their Stellar contract address (C...). The Keeper daemon will begin periodic state health scans immediately.
+                      </p>
+                      <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ marginTop: "var(--space-xs)" }}>
+                        ➕ Watch New Contract
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredContracts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-2xl)", color: "var(--text-muted)" }}>
+                    No contracts matching current filters.
                   </td>
                 </tr>
               ) : (

@@ -77,15 +77,21 @@ export default function OverviewPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <span className="health-dot healthy" />
           <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-            RPC Network: <span style={{ color: "var(--color-healthy)" }}>Stellar Testnet (Protocol 21)</span>
+            RPC Network:{" "}
+            <span style={{ color: "var(--color-healthy)", textTransform: "capitalize" }}>
+              Stellar {summary?.network ?? "testnet"} (Protocol {summary?.protocol_version ?? 21})
+            </span>
           </span>
           <span style={{ color: "var(--border-default)" }}>|</span>
           <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Telemetry: <span className="mono" style={{ color: "var(--text-primary)" }}>{summary?.last_snapshot_at ? new Date(summary.last_snapshot_at).toLocaleTimeString() : "Live Polling"}</span>
+            Telemetry:{" "}
+            <span className="mono" style={{ color: "var(--text-primary)" }}>
+              {summary?.last_snapshot_at ? new Date(summary.last_snapshot_at).toLocaleTimeString() : "Live Polling"}
+            </span>
           </span>
           <span style={{ color: "var(--border-default)" }}>|</span>
           <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Ledger Interval: <span className="mono">~5.0s</span>
+            Ledger Interval: <span className="mono">~{summary?.ledger_interval_seconds ?? 5}.0s</span>
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", fontSize: "0.8rem" }}>
@@ -196,32 +202,41 @@ export default function OverviewPage() {
               borderRadius: "var(--radius-sm)",
               overflow: "hidden",
               marginBottom: "var(--space-md)",
+              background: totalKeys === 0 ? "var(--bg-elevated)" : undefined,
             }}
           >
-            <div
-              style={{
-                width: `${totalKeys ? (persistentKeys / totalKeys) * 100 : 60}%`,
-                background: "hsl(240, 80%, 65%)",
-                transition: "width 0.5s ease",
-              }}
-              title={`Persistent: ${persistentKeys}`}
-            />
-            <div
-              style={{
-                width: `${totalKeys ? (tempKeys / totalKeys) * 100 : 25}%`,
-                background: "hsl(200, 80%, 55%)",
-                transition: "width 0.5s ease",
-              }}
-              title={`Temporary: ${tempKeys}`}
-            />
-            <div
-              style={{
-                width: `${totalKeys ? (instanceKeys / totalKeys) * 100 : 15}%`,
-                background: "hsl(280, 70%, 55%)",
-                transition: "width 0.5s ease",
-              }}
-              title={`Instance: ${instanceKeys}`}
-            />
+            {totalKeys === 0 ? (
+              <div style={{ width: "100%", textAlign: "center", fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: "20px" }}>
+                No active storage keys recorded
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    width: `${(persistentKeys / totalKeys) * 100}%`,
+                    background: "hsl(240, 80%, 65%)",
+                    transition: "width 0.5s ease",
+                  }}
+                  title={`Persistent: ${persistentKeys}`}
+                />
+                <div
+                  style={{
+                    width: `${(tempKeys / totalKeys) * 100}%`,
+                    background: "hsl(200, 80%, 55%)",
+                    transition: "width 0.5s ease",
+                  }}
+                  title={`Temporary: ${tempKeys}`}
+                />
+                <div
+                  style={{
+                    width: `${(instanceKeys / totalKeys) * 100}%`,
+                    background: "hsl(280, 70%, 55%)",
+                    transition: "width 0.5s ease",
+                  }}
+                  title={`Instance: ${instanceKeys}`}
+                />
+              </>
+            )}
           </div>
 
           {/* Legend */}
@@ -249,11 +264,15 @@ export default function OverviewPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Rule SOL001 (Unbounded Keys)</span>
-              <span className="badge badge-healthy">Pass</span>
+              <span className={`badge ${contracts.length > 0 ? "badge-healthy" : "badge-tier"}`}>
+                {contracts.length > 0 ? "Compliant" : "Idle"}
+              </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Rule SOL002 (Missing Bump)</span>
-              <span className="badge badge-warning">1 Warning</span>
+              <span className={`badge ${warningCount > 0 ? "badge-warning" : "badge-healthy"}`}>
+                {warningCount > 0 ? `${warningCount} Warning` : "Pass"}
+              </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Rule SOL003 (Archived Recovery)</span>
@@ -295,61 +314,78 @@ export default function OverviewPage() {
               </tr>
             </thead>
             <tbody>
-              {contracts.map((c) => (
-                <tr key={c.id}>
-                  <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-                      <span className={`health-dot ${c.status}`} />
-                      <span className={`badge badge-${c.status}`}>{c.status}</span>
+              {contracts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-2xl)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-md)" }}>
+                      <span style={{ fontSize: "2.5rem" }}>🛡️</span>
+                      <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>No Contracts Monitored Yet</div>
+                      <p style={{ color: "var(--text-muted)", maxWidth: 460, fontSize: "0.85rem", lineHeight: 1.5 }}>
+                        Register your Soroban smart contract to enable real-time on-chain TTL telemetry, proactive rent decay alerts, and policy-governed automated keeper renewal.
+                      </p>
+                      <Link href="/contracts" className="btn btn-primary" style={{ marginTop: "var(--space-xs)" }}>
+                        ➕ Watch Your First Contract
+                      </Link>
                     </div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{c.name}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
-                      <span className="mono" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                        {c.address.slice(0, 10)}...{c.address.slice(-6)}
-                      </span>
-                      <button
-                        onClick={() => copyAddress(c.address)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          color: copiedId === c.address ? "var(--color-healthy)" : "var(--text-muted)",
-                        }}
-                        title="Copy Address"
-                      >
-                        {copiedId === c.address ? "✓ Copied" : "📋"}
-                      </button>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="badge badge-tier">{c.network}</span>
-                  </td>
-                  <td>
-                    <span className="badge badge-tier" style={{ marginRight: 4 }}>
-                      {c.persistentKeys}P
-                    </span>
-                    <span className="badge badge-info" style={{ marginRight: 4 }}>
-                      {c.temporaryKeys}T
-                    </span>
-                    <span className="badge badge-warning">{c.instanceKeys}I</span>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{c.minTtlLedgers.toLocaleString()} ledgers</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      ~{Math.round(c.minTtlLedgers / 17280)} days remaining
-                    </div>
-                  </td>
-                  <td style={{ fontSize: "0.85rem" }}>{c.nextRenewalEstimated}</td>
-                  <td>
-                    <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                      Inspect →
-                    </Link>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                contracts.map((c) => (
+                  <tr key={c.id}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
+                        <span className={`health-dot ${c.status}`} />
+                        <span className={`badge badge-${c.status}`}>{c.status}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{c.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
+                        <span className="mono" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          {c.address.slice(0, 10)}...{c.address.slice(-6)}
+                        </span>
+                        <button
+                          onClick={() => copyAddress(c.address)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "0.75rem",
+                            color: copiedId === c.address ? "var(--color-healthy)" : "var(--text-muted)",
+                          }}
+                          title="Copy Address"
+                        >
+                          {copiedId === c.address ? "✓ Copied" : "📋"}
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="badge badge-tier">{c.network}</span>
+                    </td>
+                    <td>
+                      <span className="badge badge-tier" style={{ marginRight: 4 }}>
+                        {c.persistentKeys}P
+                      </span>
+                      <span className="badge badge-info" style={{ marginRight: 4 }}>
+                        {c.temporaryKeys}T
+                      </span>
+                      <span className="badge badge-warning">{c.instanceKeys}I</span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{c.minTtlLedgers.toLocaleString()} ledgers</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                        ~{Math.round(c.minTtlLedgers / 17280)} days remaining
+                      </div>
+                    </td>
+                    <td style={{ fontSize: "0.85rem" }}>{c.nextRenewalEstimated}</td>
+                    <td>
+                      <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+                        Inspect →
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

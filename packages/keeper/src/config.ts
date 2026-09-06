@@ -64,13 +64,43 @@ export function loadConfig(): KeeperConfig {
     };
   }
 
+  const alertChannels: KeeperConfig["alert_channels"] = [
+    { type: "log" as const, min_severity: "low" as const },
+  ];
+
+  if (process.env.SLACK_WEBHOOK_URL) {
+    alertChannels.push({
+      type: "slack" as const,
+      webhook_url: process.env.SLACK_WEBHOOK_URL,
+      channel: process.env.SLACK_CHANNEL,
+      min_severity: "high" as const,
+    });
+  }
+
+  if (process.env.PAGERDUTY_ROUTING_KEY) {
+    alertChannels.push({
+      type: "pagerduty" as const,
+      routing_key: process.env.PAGERDUTY_ROUTING_KEY,
+      min_severity: "critical" as const,
+    });
+  }
+
+  if (process.env.ALERT_WEBHOOK_URL) {
+    alertChannels.push({
+      type: "webhook" as const,
+      url: process.env.ALERT_WEBHOOK_URL,
+      auth_header: process.env.ALERT_WEBHOOK_AUTH,
+      min_severity: "high" as const,
+    });
+  }
+
   const rawConfig = {
     rpc_url: process.env.KEEPER_RPC_URL ?? fileConfig.rpc_url ?? "https://soroban-testnet.stellar.org",
-    network_passphrase: process.env.KEEPER_NETWORK_PASSPHRASE ?? fileConfig.network_passphrase ?? "Test SDF Network ; September 2015",
+    network_passphrase: process.env.KEEPER_NETWORK_PASS_PHRASE ?? process.env.KEEPER_NETWORK_PASSPHRASE ?? fileConfig.network_passphrase ?? "Test SDF Network ; September 2015",
     poll_interval_ms: Number(process.env.KEEPER_POLL_INTERVAL_MS ?? fileConfig.poll_interval_ms ?? 60000),
     database_url: process.env.KEEPER_DATABASE_URL ?? process.env.DATABASE_URL ?? fileConfig.database_url ?? "postgresql://localhost:5432/soroban_state_ops",
     signer,
-    alert_channels: [{ type: "log" as const, min_severity: "low" as const }],
+    alert_channels: alertChannels,
     max_cost_per_renewal_xlm: Number(process.env.KEEPER_MAX_COST_PER_RENEWAL ?? fileConfig.max_cost_per_renewal ?? 10),
     max_daily_spend_xlm: Number(process.env.KEEPER_MAX_DAILY_SPEND ?? fileConfig.max_daily_spend ?? 100),
     dry_run: process.env.KEEPER_DRY_RUN === "true" || fileConfig.dry_run === true,

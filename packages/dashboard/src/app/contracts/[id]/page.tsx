@@ -2,20 +2,25 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { MonitoredContract, StateKeyEntry } from "../../../lib/types";
-import { fetchContractById, renewContractKey } from "../../../lib/api";
+import { MonitoredContract, StateKeyEntry, KeeperJobItem } from "../../../lib/types";
+import { fetchContractById, renewContractKey, fetchContractJobs } from "../../../lib/api";
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [contract, setContract] = useState<MonitoredContract | null>(null);
+  const [jobs, setJobs] = useState<KeeperJobItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [bumpingKey, setBumpingKey] = useState<string | null>(null);
   const [bumpSuccess, setBumpSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const data = await fetchContractById(resolvedParams.id);
+      const [data, jobList] = await Promise.all([
+        fetchContractById(resolvedParams.id),
+        fetchContractJobs(resolvedParams.id),
+      ]);
       setContract(data);
+      setJobs(jobList);
       setLoading(false);
     }
     load();
@@ -49,6 +54,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           keys: updatedKeys,
         });
       }
+      fetchContractJobs(resolvedParams.id).then(setJobs);
     } else {
       setBumpSuccess(`⚠️ Could not queue renewal: ${res.error}`);
     }
@@ -318,33 +324,33 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="mono" style={{ fontSize: "0.8rem" }}>JOB-8812</td>
-                <td>ReserveData</td>
-                <td>extend_ttl (+535,680)</td>
-                <td className="mono">#3,124,800</td>
-                <td>0.0051 XLM</td>
-                <td><span className="badge badge-healthy">Success</span></td>
-                <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>2026-09-04 12:00 UTC</td>
-              </tr>
-              <tr>
-                <td className="mono" style={{ fontSize: "0.8rem" }}>JOB-8811</td>
-                <td>TotalShares</td>
-                <td>extend_ttl (+535,680)</td>
-                <td className="mono">#3,124,800</td>
-                <td>0.0049 XLM</td>
-                <td><span className="badge badge-healthy">Success</span></td>
-                <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>2026-09-04 12:00 UTC</td>
-              </tr>
-              <tr>
-                <td className="mono" style={{ fontSize: "0.8rem" }}>JOB-8740</td>
-                <td>SwapPriceCache</td>
-                <td>extend_ttl (+17,280)</td>
-                <td className="mono">#3,120,100</td>
-                <td>0.0035 XLM</td>
-                <td><span className="badge badge-healthy">Success</span></td>
-                <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>2026-09-03 08:30 UTC</td>
-              </tr>
+              {jobs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-xl)", color: "var(--text-muted)" }}>
+                    No keeper execution jobs recorded for this contract yet.
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((j) => (
+                  <tr key={j.id}>
+                    <td className="mono" style={{ fontSize: "0.8rem" }}>
+                      {j.id.slice(0, 8)}
+                    </td>
+                    <td>{j.key_name}</td>
+                    <td>{j.action}</td>
+                    <td className="mono">{j.tx_hash ? `${j.tx_hash.slice(0, 8)}...` : "—"}</td>
+                    <td>{j.cost_xlm ? `${j.cost_xlm.toFixed(4)} XLM` : j.cost_stroops ? `${j.cost_stroops} stroops` : "Pending"}</td>
+                    <td>
+                      <span className={`badge ${j.status === "confirmed" ? "badge-healthy" : j.status === "failed" ? "badge-critical" : "badge-info"}`}>
+                        {j.status}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      {new Date(j.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

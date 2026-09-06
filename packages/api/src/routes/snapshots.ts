@@ -78,7 +78,24 @@ export async function registerSnapshotRoutes(app: FastifyInstance): Promise<void
         db.query(`SELECT MAX(recorded_at) as last FROM ttl_snapshots`),
       ]);
 
+    const activeChannels = ["log"];
+    if (process.env.SLACK_WEBHOOK_URL) activeChannels.push("slack");
+    if (process.env.PAGERDUTY_ROUTING_KEY) activeChannels.push("pagerduty");
+    if (process.env.ALERT_WEBHOOK_URL) activeChannels.push("webhook");
+
+    const recentJobs = await db.query(
+      `SELECT kj.*, c.name as contract_name
+       FROM keeper_jobs kj
+       LEFT JOIN contracts c ON c.id = kj.contract_id
+       ORDER BY kj.created_at DESC
+       LIMIT 5`
+    );
+
     return reply.send({
+      network: process.env.STELLAR_NETWORK ?? "testnet",
+      protocol_version: 21,
+      ledger_interval_seconds: 5,
+      active_channels: activeChannels,
       total_contracts: Number(contracts.rows[0].count),
       total_state_keys: Number(keys.rows[0].count),
       health_distribution: {
@@ -91,6 +108,7 @@ export async function registerSnapshotRoutes(app: FastifyInstance): Promise<void
       pending_jobs: Number(pendingJobs.rows[0].count),
       total_renewal_cost_xlm: Number(totalCost.rows[0].total),
       last_snapshot_at: lastSnapshot.rows[0]?.last ?? null,
+      recent_jobs: recentJobs.rows,
     });
   });
 }

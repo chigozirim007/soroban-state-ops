@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: process.env.OUTPUT_STANDALONE === "true" ? "standalone" : undefined,
   reactCompiler: true,
 };
 

@@ -18,6 +18,7 @@ RUN pnpm --filter @soroban-ops/shared-types build
 
 # Build dashboard with standalone output
 COPY packages/dashboard/ packages/dashboard/
+ENV OUTPUT_STANDALONE=true
 RUN pnpm --filter @soroban-ops/dashboard build
 
 # Production stage

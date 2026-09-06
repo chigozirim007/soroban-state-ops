@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { MonitoredContract, StateKeyEntry, KeeperJobItem } from "../../../lib/types";
 import { fetchContractById, renewContractKey, fetchContractJobs } from "../../../lib/api";
+import { IconZap, IconSuccess, IconWarning, IconClose, IconArrowLeft } from "../../../components/icons";
 
 export default function ContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -35,7 +36,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
 
     if (res.success) {
       setBumpSuccess(
-        `✅ Renewal job queued for ${keyName}! Job ID: ${res.job?.id?.slice(0, 8) ?? "created"}. Keeper daemon will execute it on-chain.`
+        `Renewal job queued for ${keyName}! Job ID: ${res.job?.id?.slice(0, 8) ?? "created"}. Keeper daemon will execute it on-chain.`
       );
       if (contract) {
         const updatedKeys: StateKeyEntry[] = contract.keys.map((k) => {
@@ -56,7 +57,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
       }
       fetchContractJobs(resolvedParams.id).then(setJobs);
     } else {
-      setBumpSuccess(`⚠️ Could not queue renewal: ${res.error}`);
+      setBumpSuccess(`Could not queue renewal: ${res.error}`);
     }
   };
 
@@ -75,8 +76,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
         <p style={{ color: "var(--text-muted)", margin: "var(--space-md) 0" }}>
           The requested contract could not be located in the registry.
         </p>
-        <Link href="/contracts" className="btn btn-primary">
-          ← Return to Contracts
+        <Link href="/contracts" className="btn btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <IconArrowLeft size={14} /> Return to Contracts
         </Link>
       </div>
     );
@@ -86,8 +87,8 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
     <div className="animate-in">
       {/* Back link */}
       <div style={{ marginBottom: "var(--space-md)" }}>
-        <Link href="/contracts" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.85rem" }}>
-          ← Back to All Contracts
+        <Link href="/contracts" style={{ color: "var(--text-secondary)", textDecoration: "none", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <IconArrowLeft size={14} /> Back to All Contracts
         </Link>
       </div>
 
@@ -113,7 +114,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               className="btn btn-primary"
               style={{ fontSize: "0.85rem" }}
             >
-              {bumpingKey === "all" ? "Submitting TX..." : "⚡ Extend All State TTLs"}
+              {bumpingKey === "all" ? "Submitting TX..." : <><IconZap size={15} /> Extend All State TTLs</>}
             </button>
           </div>
         </div>
@@ -168,7 +169,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
-            <span>✅</span>
+            <IconSuccess size={18} color="var(--color-healthy)" />
             <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-healthy)" }}>
               {bumpSuccess}
             </span>
@@ -177,7 +178,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             onClick={() => setBumpSuccess(null)}
             style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
           >
-            ✕
+            <IconClose size={16} />
           </button>
         </div>
       )}
@@ -290,7 +291,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                         className="btn btn-ghost"
                         style={{ padding: "4px 10px", fontSize: "0.75rem" }}
                       >
-                        {bumpingKey === k.keyName ? "Bumping..." : "⚡ Extend TTL"}
+                        {bumpingKey === k.keyName ? "Bumping..." : <><IconZap size={14} /> Extend TTL</>}
                       </button>
                     </td>
                   </tr>

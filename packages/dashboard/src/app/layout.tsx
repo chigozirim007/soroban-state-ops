@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SidebarNav } from "./sidebar-nav";
+import { IconChain } from "../components/icons";
 
 export const metadata: Metadata = {
   title: "Soroban State Ops — Storage Lifecycle Dashboard",
@@ -19,7 +20,9 @@ export default function RootLayout({
         <div className="layout">
           <aside className="sidebar">
             <div className="sidebar-logo">
-              <span className="logo-icon">⛓️</span>
+              <span className="logo-icon" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                <IconChain size={22} />
+              </span>
               <span>State Ops</span>
             </div>
 

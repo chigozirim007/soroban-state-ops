@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MonitoredContract, AlertItem } from "../lib/types";
 import { fetchContracts, fetchAlerts, fetchDashboardSummary, DashboardSummaryData } from "../lib/api";
+import { IconPlus, IconCost, IconWarning, IconCritical, IconShield, IconCopy, IconCheck, IconArrowRight, IconInspect } from "../components/icons";
 
 export default function OverviewPage() {
   const [contracts, setContracts] = useState<MonitoredContract[]>([]);
@@ -53,10 +54,10 @@ export default function OverviewPage() {
         </div>
         <div style={{ display: "flex", gap: "var(--space-sm)" }}>
           <Link href="/contracts" className="btn btn-primary">
-            ➕ Watch Contract
+            <IconPlus size={15} /> Watch Contract
           </Link>
           <Link href="/cost" className="btn btn-ghost">
-            💰 Rent Estimator
+            <IconCost size={15} /> Rent Estimator
           </Link>
         </div>
       </div>
@@ -126,7 +127,7 @@ export default function OverviewPage() {
           </div>
           <div className="stat-sub">
             {criticalCount > 0 ? (
-              <span style={{ color: "var(--color-critical)" }}>⚠️ Immediate action required</span>
+              <span style={{ color: "var(--color-critical)", display: "inline-flex", alignItems: "center", gap: 4 }}><IconWarning size={14} /> Immediate action required</span>
             ) : (
               <span style={{ color: "var(--color-healthy)" }}>All state safely buffered</span>
             )}
@@ -168,7 +169,7 @@ export default function OverviewPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
-            <span style={{ fontSize: "1.5rem" }}>🚨</span>
+            <IconCritical size={28} color="var(--color-critical)" />
             <div>
               <div style={{ fontWeight: 700, color: "var(--color-critical)" }}>
                 Critical State Expiry Imminent
@@ -295,8 +296,8 @@ export default function OverviewPage() {
               Active contracts evaluated by the Soroban State Ops Keeper daemon.
             </p>
           </div>
-          <Link href="/contracts" className="btn btn-ghost" style={{ fontSize: "0.8rem" }}>
-            View All Contracts →
+          <Link href="/contracts" className="btn btn-ghost" style={{ fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            View All Contracts <IconArrowRight size={13} />
           </Link>
         </div>
 
@@ -318,13 +319,13 @@ export default function OverviewPage() {
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-2xl)" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-md)" }}>
-                      <span style={{ fontSize: "2.5rem" }}>🛡️</span>
+                      <IconShield size={44} color="var(--accent-primary)" />
                       <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>No Contracts Monitored Yet</div>
                       <p style={{ color: "var(--text-muted)", maxWidth: 460, fontSize: "0.85rem", lineHeight: 1.5 }}>
                         Register your Soroban smart contract to enable real-time on-chain TTL telemetry, proactive rent decay alerts, and policy-governed automated keeper renewal.
                       </p>
-                      <Link href="/contracts" className="btn btn-primary" style={{ marginTop: "var(--space-xs)" }}>
-                        ➕ Watch Your First Contract
+                      <Link href="/contracts" className="btn btn-primary" style={{ marginTop: "var(--space-xs)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <IconPlus size={15} /> Watch Your First Contract
                       </Link>
                     </div>
                   </td>
@@ -355,7 +356,7 @@ export default function OverviewPage() {
                           }}
                           title="Copy Address"
                         >
-                          {copiedId === c.address ? "✓ Copied" : "📋"}
+                          {copiedId === c.address ? <><IconCheck size={12} /> Copied</> : <IconCopy size={12} />}
                         </button>
                       </div>
                     </td>
@@ -379,8 +380,8 @@ export default function OverviewPage() {
                     </td>
                     <td style={{ fontSize: "0.85rem" }}>{c.nextRenewalEstimated}</td>
                     <td>
-                      <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                        Inspect →
+                      <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 10px", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        Inspect <IconArrowRight size={12} />
                       </Link>
                     </td>
                   </tr>

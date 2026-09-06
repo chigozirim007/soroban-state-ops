@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MonitoredContract } from "../../lib/types";
 import { fetchContracts, registerContract, deleteContract } from "../../lib/api";
+import { IconPlus, IconContracts, IconClose, IconDelete, IconArrowRight, IconInspect } from "../../components/icons";
 
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<MonitoredContract[]>([]);
@@ -79,7 +80,7 @@ export default function ContractsPage() {
           </p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn btn-primary">
-          ➕ Watch New Contract
+          <IconPlus size={15} /> Watch New Contract
         </button>
       </div>
 
@@ -174,13 +175,13 @@ export default function ContractsPage() {
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: "var(--space-2xl)" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-md)" }}>
-                      <span style={{ fontSize: "2.5rem" }}>📋</span>
+                      <IconContracts size={44} color="var(--accent-primary)" />
                       <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>No Contracts in Registry</div>
                       <p style={{ color: "var(--text-muted)", maxWidth: 460, fontSize: "0.85rem", lineHeight: 1.5 }}>
                         Start monitoring Soroban contracts by registering their Stellar contract address (C...). The Keeper daemon will begin periodic state health scans immediately.
                       </p>
-                      <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ marginTop: "var(--space-xs)" }}>
-                        ➕ Watch New Contract
+                      <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ marginTop: "var(--space-xs)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <IconPlus size={15} /> Watch New Contract
                       </button>
                     </div>
                   </td>
@@ -232,8 +233,8 @@ export default function ContractsPage() {
                     </td>
                     <td>
                       <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                        <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>
-                          Inspect State →
+                        <Link href={`/contracts/${c.id}`} className="btn btn-ghost" style={{ padding: "4px 12px", fontSize: "0.8rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          Inspect State <IconArrowRight size={12} />
                         </Link>
                         <button
                           onClick={() => handleDelete(c.id, c.name)}
@@ -241,7 +242,7 @@ export default function ContractsPage() {
                           style={{ padding: "4px 8px", fontSize: "0.8rem", color: "var(--color-critical)" }}
                           title={`Stop watching ${c.name}`}
                         >
-                          ✕
+                          <IconDelete size={14} />
                         </button>
                       </div>
                     </td>
@@ -285,7 +286,7 @@ export default function ContractsPage() {
                 onClick={() => setShowModal(false)}
                 style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer" }}
               >
-                ✕
+                <IconClose size={18} />
               </button>
             </div>
 

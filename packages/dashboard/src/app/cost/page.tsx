@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { StorageTier } from "../../lib/types";
 import { calculateStorageCost } from "../../lib/api";
+import { IconCopy, IconCheck, IconTip } from "../../components/icons";
 
 export default function CostEstimatorPage() {
   const [tier, setTier] = useState<StorageTier>("persistent");
@@ -295,7 +296,7 @@ target_ledgers = ${targetTtlLedgers}
               color: "var(--color-info)",
             }}
           >
-            💡 <strong>State Policy Tip:</strong> For high-cardinality collections, ensure your smart contract invokes <code>extend_ttl</code> only when entries approach threshold to minimize invocation fee overhead.
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><IconTip size={15} /></span> <strong>State Policy Tip:</strong> For high-cardinality collections, ensure your smart contract invokes <code>extend_ttl</code> only when entries approach threshold to minimize invocation fee overhead.
           </div>
         </div>
       </div>
@@ -310,7 +311,7 @@ target_ledgers = ${targetTtlLedgers}
             </p>
           </div>
           <button onClick={copyToml} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
-            {copiedToml ? "✓ Copied TOML!" : "📋 Copy TOML Snippet"}
+            {copiedToml ? <><IconCheck size={15} /> Copied TOML!</> : <><IconCopy size={15} /> Copy TOML Snippet</>}
           </button>
         </div>
 

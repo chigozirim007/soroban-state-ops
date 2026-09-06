@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertItem } from "../../lib/types";
 import { fetchAlerts, acknowledgeAlert, resolveAlert, fetchDashboardSummary, DashboardSummaryData } from "../../lib/api";
+import { IconSuccess, IconWebhook, IconCheck, IconTerminal, IconSlack, IconPagerDuty, IconArrowRight } from "../../components/icons";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
@@ -143,7 +144,7 @@ export default function AlertsPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
           {alerts.length === 0 ? (
             <div style={{ textAlign: "center", padding: "var(--space-2xl)", color: "var(--text-secondary)" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "var(--space-sm)" }}>✅</div>
+              <div style={{ fontSize: "2.5rem", marginBottom: "var(--space-sm)" }}><IconSuccess size={44} color="var(--color-healthy)" /></div>
               <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "var(--color-healthy)", marginBottom: "var(--space-xs)" }}>
                 All Systems Nominal
               </div>
@@ -189,8 +190,8 @@ export default function AlertsPage() {
                     <span className="mono" style={{ fontSize: "0.75rem", color: "var(--accent-primary)" }}>
                       ::{a.keyName}
                     </span>
-                    <span className="badge badge-tier" style={{ textTransform: "capitalize" }}>
-                      📡 {a.channel}
+                    <span className="badge badge-tier" style={{ textTransform: "capitalize", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      <IconWebhook size={12} /> {a.channel}
                     </span>
                   </div>
 
@@ -225,14 +226,14 @@ export default function AlertsPage() {
                     </button>
                   )}
                   {a.status === "resolved" && (
-                    <span className="badge badge-healthy">✓ Resolved</span>
+                    <span className="badge badge-healthy" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><IconCheck size={12} /> Resolved</span>
                   )}
                   <Link
                     href={`/contracts/${a.contractId}`}
                     className="btn btn-ghost"
-                    style={{ padding: "4px 10px", fontSize: "0.75rem" }}
+                    style={{ padding: "4px 10px", fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: 3 }}
                   >
-                    View State →
+                    View State <IconArrowRight size={12} />
                   </Link>
                 </div>
               </div>
@@ -248,7 +249,7 @@ export default function AlertsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "var(--space-lg)" }}>
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
-            <span style={{ fontWeight: 600 }}>📝 System Logger</span>
+            <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><IconTerminal size={16} /> System Logger</span>
             <span className="badge badge-healthy">Active</span>
           </div>
           <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "var(--space-sm)" }}>
@@ -261,7 +262,7 @@ export default function AlertsPage() {
 
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
-            <span style={{ fontWeight: 600 }}>💬 Slack Webhook</span>
+            <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><IconSlack size={16} /> Slack Webhook</span>
             <span className={`badge ${activeChannels.includes("slack") ? "badge-healthy" : "badge-tier"}`}>
               {activeChannels.includes("slack") ? "Active" : "Not Set"}
             </span>
@@ -276,7 +277,7 @@ export default function AlertsPage() {
 
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
-            <span style={{ fontWeight: 600 }}>📟 PagerDuty Events v2</span>
+            <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><IconPagerDuty size={16} /> PagerDuty Events v2</span>
             <span className={`badge ${activeChannels.includes("pagerduty") ? "badge-healthy" : "badge-tier"}`}>
               {activeChannels.includes("pagerduty") ? "Active" : "Not Set"}
             </span>
@@ -291,7 +292,7 @@ export default function AlertsPage() {
 
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-sm)" }}>
-            <span style={{ fontWeight: 600 }}>🔗 Custom Webhook</span>
+            <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}><IconWebhook size={16} /> Custom Webhook</span>
             <span className={`badge ${activeChannels.includes("webhook") ? "badge-healthy" : "badge-tier"}`}>
               {activeChannels.includes("webhook") ? "Active" : "Not Set"}
             </span>

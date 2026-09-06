@@ -249,37 +249,37 @@ export default function AlertsPage() {
           ({activeChannels.length}/4 Active)
         </span>
       </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", gap: "var(--space-lg)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "var(--space-lg)" }}>
         {/* System Logger */}
         <div className="card" style={{ display: "flex", flexDirection: "column", padding: "var(--space-lg)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "var(--space-md)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: "rgba(0, 240, 255, 0.1)",
-                  border: "1px solid rgba(0, 240, 255, 0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--accent-primary)",
-                  flexShrink: 0,
-                }}
-              >
-                <IconTerminal size={18} />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap" }}>
-                System Logger
-              </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-md)" }}>
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: "rgba(0, 240, 255, 0.1)",
+                border: "1px solid rgba(0, 240, 255, 0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent-primary)",
+                boxShadow: "0 0 12px rgba(0, 240, 255, 0.12)",
+                flexShrink: 0,
+              }}
+            >
+              <IconTerminal size={20} />
             </div>
             <span className="badge badge-healthy">
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--color-healthy)", boxShadow: "0 0 6px var(--color-healthy)", display: "inline-block" }} />
               Active
             </span>
           </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "var(--space-md)", flexGrow: 1 }}>
+
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "var(--space-xs)" }}>
+            System Logger
+          </h3>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: "var(--space-md)", flexGrow: 1 }}>
             Structured JSON logging via Pino to stdout/stderr. Always enabled as base fallback.
           </p>
           <div
@@ -289,7 +289,7 @@ export default function AlertsPage() {
               color: "var(--accent-primary)",
               background: "rgba(0, 240, 255, 0.05)",
               border: "1px solid rgba(0, 240, 255, 0.15)",
-              padding: "6px 10px",
+              padding: "7px 10px",
               borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
@@ -303,27 +303,23 @@ export default function AlertsPage() {
 
         {/* Slack Webhook */}
         <div className="card" style={{ display: "flex", flexDirection: "column", padding: "var(--space-lg)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "var(--space-md)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: activeChannels.includes("slack") ? "rgba(0, 240, 255, 0.1)" : "rgba(148, 163, 184, 0.06)",
-                  border: activeChannels.includes("slack") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(148, 163, 184, 0.14)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: activeChannels.includes("slack") ? "var(--accent-primary)" : "var(--text-secondary)",
-                  flexShrink: 0,
-                }}
-              >
-                <IconSlack size={18} />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap" }}>
-                Slack Webhook
-              </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-md)" }}>
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: activeChannels.includes("slack") ? "rgba(0, 240, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
+                border: activeChannels.includes("slack") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeChannels.includes("slack") ? "var(--accent-primary)" : "var(--text-secondary)",
+                boxShadow: activeChannels.includes("slack") ? "0 0 12px rgba(0, 240, 255, 0.12)" : "none",
+                flexShrink: 0,
+              }}
+            >
+              <IconSlack size={20} />
             </div>
             <span className={`badge ${activeChannels.includes("slack") ? "badge-healthy" : "badge-inactive"}`}>
               <span
@@ -331,7 +327,8 @@ export default function AlertsPage() {
                   width: "6px",
                   height: "6px",
                   borderRadius: "50%",
-                  background: activeChannels.includes("slack") ? "var(--color-healthy)" : "#64748B",
+                  background: activeChannels.includes("slack") ? "var(--color-healthy)" : "transparent",
+                  border: activeChannels.includes("slack") ? "none" : "1.5px solid #64748B",
                   boxShadow: activeChannels.includes("slack") ? "0 0 6px var(--color-healthy)" : "none",
                   display: "inline-block",
                 }}
@@ -339,7 +336,11 @@ export default function AlertsPage() {
               {activeChannels.includes("slack") ? "Active" : "Not Set"}
             </span>
           </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "var(--space-md)", flexGrow: 1 }}>
+
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "var(--space-xs)" }}>
+            Slack Webhook
+          </h3>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: "var(--space-md)", flexGrow: 1 }}>
             Posts rich block notifications to Slack when contract TTL enters warning threshold.
           </p>
           <div
@@ -348,8 +349,8 @@ export default function AlertsPage() {
               fontSize: "0.72rem",
               color: activeChannels.includes("slack") ? "var(--accent-primary)" : "var(--text-muted)",
               background: activeChannels.includes("slack") ? "rgba(0, 240, 255, 0.05)" : "rgba(6, 10, 18, 0.7)",
-              border: activeChannels.includes("slack") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(148, 163, 184, 0.18)",
-              padding: "6px 10px",
+              border: activeChannels.includes("slack") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(255, 255, 255, 0.1)",
+              padding: "7px 10px",
               borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
@@ -363,27 +364,23 @@ export default function AlertsPage() {
 
         {/* PagerDuty Events v2 */}
         <div className="card" style={{ display: "flex", flexDirection: "column", padding: "var(--space-lg)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "var(--space-md)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: activeChannels.includes("pagerduty") ? "rgba(0, 240, 255, 0.1)" : "rgba(148, 163, 184, 0.06)",
-                  border: activeChannels.includes("pagerduty") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(148, 163, 184, 0.14)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: activeChannels.includes("pagerduty") ? "var(--accent-primary)" : "var(--text-secondary)",
-                  flexShrink: 0,
-                }}
-              >
-                <IconPagerDuty size={18} />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap" }}>
-                PagerDuty v2
-              </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-md)" }}>
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: activeChannels.includes("pagerduty") ? "rgba(0, 240, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
+                border: activeChannels.includes("pagerduty") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeChannels.includes("pagerduty") ? "var(--accent-primary)" : "var(--text-secondary)",
+                boxShadow: activeChannels.includes("pagerduty") ? "0 0 12px rgba(0, 240, 255, 0.12)" : "none",
+                flexShrink: 0,
+              }}
+            >
+              <IconPagerDuty size={20} />
             </div>
             <span className={`badge ${activeChannels.includes("pagerduty") ? "badge-healthy" : "badge-inactive"}`}>
               <span
@@ -391,7 +388,8 @@ export default function AlertsPage() {
                   width: "6px",
                   height: "6px",
                   borderRadius: "50%",
-                  background: activeChannels.includes("pagerduty") ? "var(--color-healthy)" : "#64748B",
+                  background: activeChannels.includes("pagerduty") ? "var(--color-healthy)" : "transparent",
+                  border: activeChannels.includes("pagerduty") ? "none" : "1.5px solid #64748B",
                   boxShadow: activeChannels.includes("pagerduty") ? "0 0 6px var(--color-healthy)" : "none",
                   display: "inline-block",
                 }}
@@ -399,7 +397,11 @@ export default function AlertsPage() {
               {activeChannels.includes("pagerduty") ? "Active" : "Not Set"}
             </span>
           </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "var(--space-md)", flexGrow: 1 }}>
+
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "var(--space-xs)" }}>
+            PagerDuty v2
+          </h3>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: "var(--space-md)", flexGrow: 1 }}>
             Triggers high-urgency incidents when critical state drops below emergency threshold.
           </p>
           <div
@@ -408,8 +410,8 @@ export default function AlertsPage() {
               fontSize: "0.72rem",
               color: activeChannels.includes("pagerduty") ? "var(--accent-primary)" : "var(--text-muted)",
               background: activeChannels.includes("pagerduty") ? "rgba(0, 240, 255, 0.05)" : "rgba(6, 10, 18, 0.7)",
-              border: activeChannels.includes("pagerduty") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(148, 163, 184, 0.18)",
-              padding: "6px 10px",
+              border: activeChannels.includes("pagerduty") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(255, 255, 255, 0.1)",
+              padding: "7px 10px",
               borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",
@@ -423,27 +425,23 @@ export default function AlertsPage() {
 
         {/* Custom Webhook */}
         <div className="card" style={{ display: "flex", flexDirection: "column", padding: "var(--space-lg)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", marginBottom: "var(--space-md)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "8px",
-                  background: activeChannels.includes("webhook") ? "rgba(0, 240, 255, 0.1)" : "rgba(148, 163, 184, 0.06)",
-                  border: activeChannels.includes("webhook") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(148, 163, 184, 0.14)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: activeChannels.includes("webhook") ? "var(--accent-primary)" : "var(--text-secondary)",
-                  flexShrink: 0,
-                }}
-              >
-                <IconWebhook size={18} />
-              </div>
-              <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)", whiteSpace: "nowrap" }}>
-                Custom Webhook
-              </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--space-md)" }}>
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: activeChannels.includes("webhook") ? "rgba(0, 240, 255, 0.1)" : "rgba(255, 255, 255, 0.04)",
+                border: activeChannels.includes("webhook") ? "1px solid rgba(0, 240, 255, 0.25)" : "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: activeChannels.includes("webhook") ? "var(--accent-primary)" : "var(--text-secondary)",
+                boxShadow: activeChannels.includes("webhook") ? "0 0 12px rgba(0, 240, 255, 0.12)" : "none",
+                flexShrink: 0,
+              }}
+            >
+              <IconWebhook size={20} />
             </div>
             <span className={`badge ${activeChannels.includes("webhook") ? "badge-healthy" : "badge-inactive"}`}>
               <span
@@ -451,7 +449,8 @@ export default function AlertsPage() {
                   width: "6px",
                   height: "6px",
                   borderRadius: "50%",
-                  background: activeChannels.includes("webhook") ? "var(--color-healthy)" : "#64748B",
+                  background: activeChannels.includes("webhook") ? "var(--color-healthy)" : "transparent",
+                  border: activeChannels.includes("webhook") ? "none" : "1.5px solid #64748B",
                   boxShadow: activeChannels.includes("webhook") ? "0 0 6px var(--color-healthy)" : "none",
                   display: "inline-block",
                 }}
@@ -459,7 +458,11 @@ export default function AlertsPage() {
               {activeChannels.includes("webhook") ? "Active" : "Not Set"}
             </span>
           </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "var(--space-md)", flexGrow: 1 }}>
+
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "var(--space-xs)" }}>
+            Custom Webhook
+          </h3>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: "var(--space-md)", flexGrow: 1 }}>
             Sends signed payloads for automated DevOps, Discord bots, or SIEM pipelines.
           </p>
           <div
@@ -468,8 +471,8 @@ export default function AlertsPage() {
               fontSize: "0.72rem",
               color: activeChannels.includes("webhook") ? "var(--accent-primary)" : "var(--text-muted)",
               background: activeChannels.includes("webhook") ? "rgba(0, 240, 255, 0.05)" : "rgba(6, 10, 18, 0.7)",
-              border: activeChannels.includes("webhook") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(148, 163, 184, 0.18)",
-              padding: "6px 10px",
+              border: activeChannels.includes("webhook") ? "1px solid rgba(0, 240, 255, 0.15)" : "1px dashed rgba(255, 255, 255, 0.1)",
+              padding: "7px 10px",
               borderRadius: "var(--radius-sm)",
               display: "flex",
               alignItems: "center",

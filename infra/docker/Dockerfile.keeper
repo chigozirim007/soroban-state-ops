@@ -10,7 +10,7 @@ COPY packages/signer-sdk/package.json packages/signer-sdk/
 COPY packages/keeper/package.json packages/keeper/
 COPY packages/api/package.json packages/api/
 COPY packages/dashboard/package.json packages/dashboard/
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile
 
 # Build shared dependencies first
 COPY packages/shared-types/ packages/shared-types/

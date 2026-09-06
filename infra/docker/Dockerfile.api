@@ -1,7 +1,8 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
+# Copy all workspace package manifests
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-types/package.json packages/shared-types/
 COPY packages/lint-npm/package.json packages/lint-npm/
@@ -9,25 +10,17 @@ COPY packages/signer-sdk/package.json packages/signer-sdk/
 COPY packages/keeper/package.json packages/keeper/
 COPY packages/api/package.json packages/api/
 COPY packages/dashboard/package.json packages/dashboard/
+
+# Install all monorepo dependencies with intact symlinks
 RUN pnpm install --frozen-lockfile
 
+# Build shared types first
 COPY packages/shared-types/ packages/shared-types/
 RUN pnpm --filter @soroban-ops/shared-types build
 
+# Build API package
 COPY packages/api/ packages/api/
 RUN pnpm --filter @soroban-ops/api build
-
-# Production stage
-FROM node:22-alpine
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
-WORKDIR /app
-
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/packages/shared-types/dist ./packages/shared-types/dist
-COPY --from=base /app/packages/shared-types/package.json ./packages/shared-types/
-COPY --from=base /app/packages/api/dist ./packages/api/dist
-COPY --from=base /app/packages/api/package.json ./packages/api/
-COPY --from=base /app/pnpm-workspace.yaml ./
 
 EXPOSE 4000
 USER node

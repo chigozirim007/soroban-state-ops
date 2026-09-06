@@ -48,6 +48,22 @@ export class LocalEncryptedKeySigner implements SignerProvider {
   static async create(
     options: LocalEncryptedKeySignerOptions
   ): Promise<LocalEncryptedKeySigner> {
+    const network = options.network ?? Networks.TESTNET;
+
+    // If no keySource or empty, use an ephemeral random keypair (ideal for dry-run / observation mode)
+    if (!options.keySource || options.keySource.trim() === "") {
+      const keypair = Keypair.random();
+      return new LocalEncryptedKeySigner(keypair, network);
+    }
+
+    const trimmedSource = options.keySource.trim();
+
+    // If a raw Stellar secret key is directly provided (starts with 'S' and length 56)
+    if (trimmedSource.startsWith("S") && trimmedSource.length === 56) {
+      const keypair = Keypair.fromSecret(trimmedSource);
+      return new LocalEncryptedKeySigner(keypair, network);
+    }
+
     const passphrase =
       options.passphrase ?? process.env.KEEPER_KEY_PASSPHRASE;
     if (!passphrase) {
@@ -59,19 +75,17 @@ export class LocalEncryptedKeySigner implements SignerProvider {
     let encryptedHex: string;
     if (options.isFile !== false) {
       try {
-        encryptedHex = readFileSync(options.keySource, "utf-8").trim();
+        encryptedHex = readFileSync(trimmedSource, "utf-8").trim();
       } catch {
         // Treat as raw hex string if file read fails
-        encryptedHex = options.keySource;
+        encryptedHex = trimmedSource;
       }
     } else {
-      encryptedHex = options.keySource;
+      encryptedHex = trimmedSource;
     }
 
     const secretKey = LocalEncryptedKeySigner.decrypt(encryptedHex, passphrase);
     const keypair = Keypair.fromSecret(secretKey);
-    const network = options.network ?? Networks.TESTNET;
-
     return new LocalEncryptedKeySigner(keypair, network);
   }
 

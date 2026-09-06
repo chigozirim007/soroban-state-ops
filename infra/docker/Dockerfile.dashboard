@@ -1,9 +1,9 @@
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
 # Copy lockfile and all workspace package manifests
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/shared-types/package.json packages/shared-types/
 COPY packages/lint-npm/package.json packages/lint-npm/
 COPY packages/signer-sdk/package.json packages/signer-sdk/

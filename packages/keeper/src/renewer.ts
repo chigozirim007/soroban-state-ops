@@ -7,7 +7,7 @@ import type { SignerProvider } from "@soroban-ops/signer-sdk";
 import type { RenewalDecision, KeeperConfig } from "@soroban-ops/shared-types";
 import {
   TransactionBuilder,
-  SorobanRpc,
+  rpc,
   Operation,
   xdr,
   Address,
@@ -165,12 +165,12 @@ export class TtlRenewer {
     this.logger.debug("Simulating transaction...");
     const simulation = await server.simulateTransaction(tx);
 
-    if (SorobanRpc.Api.isSimulationError(simulation)) {
+    if (rpc.Api.isSimulationError(simulation)) {
       throw new Error(`Simulation failed: ${simulation.error}`);
     }
 
     // Assemble the transaction with simulation results
-    const assembledTx = SorobanRpc.assembleTransaction(tx, simulation).build();
+    const assembledTx = rpc.assembleTransaction(tx, simulation).build();
 
     // Sign
     this.logger.debug("Signing transaction...");
@@ -192,14 +192,14 @@ export class TtlRenewer {
     const startTime = Date.now();
 
     while (
-      getResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND &&
+      getResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND &&
       Date.now() - startTime < maxWaitMs
     ) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       getResponse = await server.getTransaction(sendResponse.hash);
     }
 
-    if (getResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+    if (getResponse.status === rpc.Api.GetTransactionStatus.SUCCESS) {
       this.logger.info(
         {
           hash: sendResponse.hash,

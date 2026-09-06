@@ -2,16 +2,16 @@
  * Soroban RPC client wrapper — TTL-focused queries for the keeper.
  */
 
-import { SorobanRpc, xdr, Address } from "@stellar/stellar-sdk";
+import { rpc, xdr, Address } from "@stellar/stellar-sdk";
 
 const LEDGER_CLOSE_TIME_SECONDS = 5;
 
 export class SorobanRpcClient {
-  private server: SorobanRpc.Server;
+  private server: rpc.Server;
   private networkPassphrase: string;
 
   constructor(rpcUrl: string, networkPassphrase: string) {
-    this.server = new SorobanRpc.Server(rpcUrl);
+    this.server = new rpc.Server(rpcUrl);
     this.networkPassphrase = networkPassphrase;
   }
 
@@ -150,7 +150,7 @@ export class SorobanRpcClient {
   }
 
   /** Get the underlying RPC server instance. */
-  getServer(): SorobanRpc.Server {
+  getServer(): rpc.Server {
     return this.server;
   }
 
